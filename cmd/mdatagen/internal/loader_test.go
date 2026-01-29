@@ -667,6 +667,99 @@ func TestLoadMetadata(t *testing.T) {
 	}
 }
 
+func TestSetMetricDefaultFields(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    map[MetricName]Metric
+		expected map[MetricName]Metric
+	}{
+		{
+			name: "no name set, no slash in key",
+			input: map[MetricName]Metric{
+				"system.cpu.time": {Signal: Signal{Description: "test"}},
+			},
+			expected: map[MetricName]Metric{
+				"system.cpu.time": {Signal: Signal{Description: "test"}}, // Name stays empty
+			},
+		},
+		{
+			name: "no name set, slash in key",
+			input: map[MetricName]Metric{
+				"system.cpu.time/v2": {Signal: Signal{Description: "test"}},
+			},
+			expected: map[MetricName]Metric{
+				"system.cpu.time/v2": {Name: "system.cpu.time", Signal: Signal{Description: "test"}},
+			},
+		},
+		{
+			name: "name already set",
+			input: map[MetricName]Metric{
+				"some.key": {Name: "custom.name", Signal: Signal{Description: "test"}},
+			},
+			expected: map[MetricName]Metric{
+				"some.key": {Name: "custom.name", Signal: Signal{Description: "test"}}, // unchanged
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			setMetricDefaultFields(tt.input)
+			require.Equal(t, tt.expected, tt.input)
+		})
+	}
+}
+
+func TestMetricEmittedMetricName(t *testing.T) {
+	tests := []struct {
+		name     string
+		metric   Metric
+		mapKey   MetricName
+		expected string
+	}{
+		{
+			name:     "name not set, use map key",
+			metric:   Metric{},
+			mapKey:   "system.cpu.time",
+			expected: "system.cpu.time",
+		},
+		{
+			name:     "name set, use name",
+			metric:   Metric{Name: "overridden.name"},
+			mapKey:   "original.key",
+			expected: "overridden.name",
+		},
+		{
+			name:     "versioned key with name set",
+			metric:   Metric{Name: "system.cpu.time"},
+			mapKey:   "system.cpu.time/v2",
+			expected: "system.cpu.time",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := tt.metric.EmittedMetricName(tt.mapKey)
+			require.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func TestVersionedMetricName(t *testing.T) {
+	md, err := LoadMetadata("testdata/versioned_metric.yaml")
+	require.NoError(t, err)
+
+	// Legacy metric - Name should be empty (uses map key)
+	legacy := md.Metrics["system.cpu.time"]
+	require.Empty(t, legacy.Name)
+
+	// Versioned metric - Name should be auto-populated from key
+	versioned := md.Metrics["system.cpu.time/v2"]
+	require.Equal(t, "system.cpu.time", versioned.Name)
+
+	// Explicit name override
+	custom := md.Metrics["custom.metric.key"]
+	require.Equal(t, "actual.metric.name", custom.Name)
+}
+
 func strPtr(s string) *string {
 	return &s
 }

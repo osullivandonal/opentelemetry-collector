@@ -71,11 +71,15 @@ var MapAttribute{{ $name.Render }} = map[string]Attribute{{ $name.Render }}{
 {{- end }}
 
 var MetricsInfo = metricsInfo{
-    {{- range $name, $metric := .Metrics }}
-    {{ $name.Render }}: metricInfo{
-        Name: "{{ $name }}",
-    },
-    {{- end }}
+  {{- range $name, $metric := .Metrics }}
+  {{ $name.Render }}: metricInfo{
+      {{- if $metric.Name }}
+      Name: "{{ $metric.Name }}",
+      {{- else }}
+      Name: "{{ $name }}",
+      {{- end }}
+  },
+  {{- end }}
 }
 
 type metricsInfo struct {
@@ -120,7 +124,11 @@ type metric{{ $name.Render }} struct {
 
 // init fills {{ $name }} metric with initial data.
 func (m *metric{{ $name.Render }}) init() {
-	m.data.SetName("{{ $name }}")
+  {{- if $metric.Name }}
+  m.data.SetName("{{ $metric.Name }}")
+  {{- else }}
+  m.data.SetName("{{ $name }}")
+  {{- end }}
 	m.data.SetDescription("{{ $metric.Description }}")
 	m.data.SetUnit("{{ $metric.Unit }}")
 	m.data.SetEmpty{{ $metric.Data.Type }}()

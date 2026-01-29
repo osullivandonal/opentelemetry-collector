@@ -1,0 +1,50 @@
+type: test_versioned
+sem_conv_version: 1.9.0
+status:
+  class: receiver
+  stability:
+    beta: [metrics]
+  distributions: []
+attributes:
+  state:
+    description: CPU state
+    type: string
+    enum: [idle, user, system]
+metrics:
+  # Legacy metric - uses map key as emitted name
+  system.cpu.time:
+    enabled: true
+    description: Legacy CPU time metric
+    stability:
+      level: deprecated
+    unit: s
+    sum:
+      value_type: double
+      monotonic: true
+      aggregation_temporality: cumulative
+    attributes: [state]
+    warnings:
+      if_enabled: This metric is deprecated, use system.cpu.time/v2 instead.
+  # New semconv metric - different config key, same emitted name
+  system.cpu.time/v2:
+    name: system.cpu.time
+    enabled: false
+    description: CPU time metric per new semantic conventions
+    stability:
+      level: beta
+    unit: s
+    sum:
+      value_type: double
+      monotonic: true
+      aggregation_temporality: cumulative
+    attributes: [state]
+  # Metric with explicit name override (different from key)
+  custom.metric.key:
+    name: actual.metric.name
+    enabled: true
+    description: Metric with custom name
+    stability:
+      level: alpha
+    unit: "1"
+    gauge:
+      value_type: int

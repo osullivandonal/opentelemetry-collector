@@ -25,6 +25,18 @@ func setAttributeDefaultFields(attrs map[AttributeName]Attribute) {
 	}
 }
 
+func setMetricDefaultFields(metrics map[MetricName]Metric) {
+	for k, v := range metrics {
+		if v.Name == "" {
+			keyStr := string(k)
+			if idx := strings.Index(keyStr, "/"); idx != -1 {
+				v.Name = keyStr[:idx]
+				metrics[k] = v
+			}
+		}
+	}
+}
+
 type TemplateContext struct {
 	Metadata
 	// Package name for generated code.
@@ -66,6 +78,8 @@ func LoadMetadata(filePath string) (Metadata, error) {
 
 	setAttributeDefaultFields(md.Attributes)
 	setAttributeDefaultFields(md.ResourceAttributes)
+	setMetricDefaultFields(md.Metrics)
+	setMetricDefaultFields(md.Telemetry.Metrics)
 
 	return md, nil
 }
