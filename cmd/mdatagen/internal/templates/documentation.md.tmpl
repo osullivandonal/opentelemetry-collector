@@ -2,7 +2,12 @@
 {{- $metricName := . }}
 {{- $metric := $metricName | metricInfo -}}
 
+{{- if $metric.Name }}
+### {{ $metric.Name }}
+Configuration key: `{{ $metricName }}`
+{{- else }}
 ### {{ $metricName }}
+{{- end }}
 
 {{ $metric.Description }}
 

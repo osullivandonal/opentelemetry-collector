@@ -112,6 +112,10 @@ attributes:
 # being described below.
 metrics:
   <metric.name>:
+    # Optional: overrides the emitted metric name. If not set, the map key is used.
+    # Useful for versioned metrics where the config key differs from the emitted name.
+    # Example: key "system.cpu.frequency/v2" with name "system.cpu.frequency"
+    name: string
     # Required: whether the metric is collected by default.
     enabled: bool
     # Required: metric description.

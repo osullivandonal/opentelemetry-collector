@@ -32,6 +32,11 @@ func (mn MetricName) RenderUnexported() (string, error) {
 type Metric struct {
 	Signal `mapstructure:",squash"`
 
+	// Name overrides the emitted metric name. If not set, the map key is used.
+	// This is useful for versioned metrics where the config key is "metric.name/v2"
+	// but the emitted metric name should be "metric.name".
+	Name string `mapstructure:"name"`
+
 	// Optional can be used to specify metrics that may
 	// or may not be present in all cases, depending on configuration.
 	Optional bool `mapstructure:"optional"`
@@ -48,6 +53,13 @@ type Metric struct {
 
 	// Override the default prefix for the metric name.
 	Prefix string `mapstructure:"prefix"`
+}
+
+func (m Metric) EmittedMetricName(mapKey MetricName) string {
+	if m.Name != "" {
+		return m.Name
+	}
+	return string(mapKey)
 }
 
 type Stability struct {
