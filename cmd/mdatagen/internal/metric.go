@@ -59,13 +59,6 @@ type Metric struct {
 	Prefix string `mapstructure:"prefix"`
 }
 
-func (m Metric) EmittedMetricName(mapKey MetricName) string {
-	if m.Name != "" {
-		return m.Name
-	}
-	return string(mapKey)
-}
-
 type Stability struct {
 	Level component.StabilityLevel `mapstructure:"level"`
 	From  string                   `mapstructure:"from"`

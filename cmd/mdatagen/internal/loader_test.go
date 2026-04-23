@@ -709,40 +709,6 @@ func TestSetMetricDefaultFields(t *testing.T) {
 	}
 }
 
-func TestMetricEmittedMetricName(t *testing.T) {
-	tests := []struct {
-		name     string
-		metric   Metric
-		mapKey   MetricName
-		expected string
-	}{
-		{
-			name:     "name not set, use map key",
-			metric:   Metric{},
-			mapKey:   "system.cpu.time",
-			expected: "system.cpu.time",
-		},
-		{
-			name:     "name set, use name",
-			metric:   Metric{Name: "overridden.name"},
-			mapKey:   "original.key",
-			expected: "overridden.name",
-		},
-		{
-			name:     "versioned key with name set",
-			metric:   Metric{Name: "system.cpu.time"},
-			mapKey:   "system.cpu.time/v2",
-			expected: "system.cpu.time",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := tt.metric.EmittedMetricName(tt.mapKey)
-			require.Equal(t, tt.expected, result)
-		})
-	}
-}
-
 func TestVersionedMetricName(t *testing.T) {
 	md, err := LoadMetadata("testdata/versioned_metric.yaml")
 	require.NoError(t, err)
