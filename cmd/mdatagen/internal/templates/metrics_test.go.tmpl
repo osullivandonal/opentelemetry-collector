@@ -193,7 +193,6 @@ func TestMetricsBuilder(t *testing.T) {
 			{{- range $ent := .Entities }}
 			eb{{ publicVar $ent.Type }}.Emit()
 			{{- end }}
-      {{- end }}
 
 			{{ if .ResourceAttributes }}
 			rb := mb.NewResourceBuilder()
