@@ -15,8 +15,7 @@ metrics:
   system.cpu.time:
     enabled: true
     description: Legacy CPU time metric
-    stability:
-      level: deprecated
+    stability: deprecated
     unit: s
     sum:
       value_type: double
@@ -30,8 +29,7 @@ metrics:
     name: system.cpu.time
     enabled: false
     description: CPU time metric per new semantic conventions
-    stability:
-      level: beta
+    stability: beta
     unit: s
     sum:
       value_type: double
@@ -43,8 +41,7 @@ metrics:
     name: actual.metric.name
     enabled: true
     description: Metric with custom name
-    stability:
-      level: alpha
+    stability: alpha
     unit: "1"
     gauge:
       value_type: int

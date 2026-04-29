@@ -154,41 +154,43 @@ func TestMetricsBuilder(t *testing.T) {
 
 			{{- range $name, $metric := .Metrics }}
 
-			{{ if $metric.Enabled }}defaultMetricsCount++{{ end }}
-			allMetricsCount++
-			{{ if $metric.Entity }}eb{{ publicVar $metric.Entity }}{{ else }}mb{{ end }}.Record{{ $name.Render }}DataPoint(ts, {{ if $metric.Data.HasMetricInputType }}"1"{{ else }}1{{ end }}
-			{{- range $metric.Attributes -}}
-			{{- if not (attributeInfo .).IsConditional -}}
-				, {{- template "getAttributeValue" . -}}
-			{{- end -}}
-			{{- end -}}
-			{{- range $metric.Attributes -}}
-			{{- if (attributeInfo .).IsConditional -}}
-				, With{{ .Render }}MetricAttribute({{- template "getAttributeValue" . -}})
-			{{- end -}}
-			{{- end -}}
-			)
-			{{- if and $reag (hasAggregatableAttributes $metric.Attributes) }}
-			if tt.name == "reaggregate_set" {
-				{{ if $metric.Entity }}eb{{ publicVar $metric.Entity }}{{ else }}mb{{ end }}.Record{{ $name.Render }}DataPoint(ts, {{ if $metric.Data.HasMetricInputType }}"3"{{ else }}3{{ end }}
-				{{- range $metric.Attributes -}}
-				{{- if not (attributeInfo .).IsConditional -}}
-					{{- if (attributeInfo .).IsRequired -}}
-					, {{- template "getAttributeValue" . -}}
-					{{- else -}}
-					, {{- template "getAttributeValueTwo" . -}}
-					{{- end -}}
-				{{- end -}}
-				{{- end -}}
-				{{- range $metric.Attributes -}}
-				{{- if (attributeInfo .).IsConditional -}}
-					, With{{ .Render }}MetricAttribute({{- template "getAttributeValue" . -}})
-				{{- end -}}
-				{{- end -}}
-				)
-			}
-			{{- end }}
-			{{- end }}
+      {{- if not $metric.Versioned }}
+        {{ if $metric.Enabled }}defaultMetricsCount++{{ end }}
+        allMetricsCount++
+        {{ if $metric.Entity }}eb{{ publicVar $metric.Entity }}{{ else }}mb{{ end }}.Record{{ $name.Render }}DataPoint(ts, {{ if $metric.Data.HasMetricInputType }}"1"{{ else }}1{{ end }}
+        {{- range $metric.Attributes -}}
+        {{- if not (attributeInfo .).IsConditional -}}
+          , {{- template "getAttributeValue" . -}}
+        {{- end -}}
+        {{- end -}}
+        {{- range $metric.Attributes -}}
+        {{- if (attributeInfo .).IsConditional -}}
+          , With{{ .Render }}MetricAttribute({{- template "getAttributeValue" . -}})
+        {{- end -}}
+        {{- end -}}
+        )
+        {{- if and $reag (hasAggregatableAttributes $metric.Attributes) }}
+        if tt.name == "reaggregate_set" {
+          {{ if $metric.Entity }}eb{{ publicVar $metric.Entity }}{{ else }}mb{{ end }}.Record{{ $name.Render }}DataPoint(ts, {{ if $metric.Data.HasMetricInputType }}"3"{{ else }}3{{ end }}
+          {{- range $metric.Attributes -}}
+          {{- if not (attributeInfo .).IsConditional -}}
+            {{- if (attributeInfo .).IsRequired -}}
+            , {{- template "getAttributeValue" . -}}
+            {{- else -}}
+            , {{- template "getAttributeValueTwo" . -}}
+            {{- end -}}
+          {{- end -}}
+          {{- end -}}
+          {{- range $metric.Attributes -}}
+          {{- if (attributeInfo .).IsConditional -}}
+            , With{{ .Render }}MetricAttribute({{- template "getAttributeValue" . -}})
+          {{- end -}}
+          {{- end -}}
+          )
+        }
+        {{- end }}
+        {{- end }}
+      {{- end }}
 
 			{{- range $ent := .Entities }}
 			eb{{ publicVar $ent.Type }}.Emit()
@@ -244,7 +246,8 @@ func TestMetricsBuilder(t *testing.T) {
 			for _, mi := range allMetricsList {
 				switch mi.Name() {
 				{{- range $name, $metric := .Metrics }}
-				case "{{ $name }}":
+        {{- if not $metric.Versioned }}
+        case "{{- if $metric.Name }}{{ $metric.Name }}{{ else }}{{ $name }}{{ end }}":
 					{{- if and $reag (hasAggregatableAttributes $metric.Attributes) }}
 					if tt.name != "reaggregate_set" {
 						assert.False(t, validatedMetrics["{{ $name }}"], "Found a duplicate in the metrics slice: {{ $name }}")
@@ -371,6 +374,7 @@ func TestMetricsBuilder(t *testing.T) {
 					{{- end }}
 					{{- end }}
 					{{- end }}
+          {{- end }}
 				}
 			}
 		})

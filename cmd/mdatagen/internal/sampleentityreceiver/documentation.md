@@ -12,6 +12,7 @@ metrics:
     enabled: false
 ```
 
+
 ### k8s.pod.cpu_time
 
 CPU time consumed by the pod
@@ -19,6 +20,7 @@ CPU time consumed by the pod
 | Unit | Metric Type | Value Type | Aggregation Temporality | Monotonic | Stability |
 | ---- | ----------- | ---------- | ----------------------- | --------- | --------- |
 | s | Sum | Double | Cumulative | true | Development |
+
 
 ### k8s.pod.phase
 
@@ -33,6 +35,7 @@ Current phase of the pod
 | Name | Description | Values | Requirement Level | Semantic Convention |
 | ---- | ----------- | ------ | ----------------- | ------------------- |
 | phase | The phase of the pod (Pending, Running, Succeeded, Failed, Unknown) | Str: ``Pending``, ``Running``, ``Succeeded``, ``Failed``, ``Unknown`` | Recommended | - |
+
 
 ### k8s.replicaset.desired
 

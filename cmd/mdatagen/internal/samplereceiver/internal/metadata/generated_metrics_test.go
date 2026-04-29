@@ -125,7 +125,6 @@ func TestMetricsBuilder(t *testing.T) {
 			defaultMetricsCount++
 			allMetricsCount++
 			mb.RecordDefaultMetricToBeRemovedDataPoint(ts, 1)
-
 			defaultMetricsCount++
 			allMetricsCount++
 			mb.RecordMetricInputTypeDataPoint(ts, "1", "string_attr-val", 19, AttributeEnumAttrRed, []any{"slice_attr-item1", "slice_attr-item2"}, map[string]any{"key1": "map_attr-val1", "key2": "map_attr-val2"})
@@ -162,7 +161,6 @@ func TestMetricsBuilder(t *testing.T) {
 			if tt.name == "reaggregate_set" {
 				mb.RecordSystemCPUTimeDataPoint(ts, 3, "cpu-val-2")
 			}
-
 			defaultMetricsCount++
 			allMetricsCount++
 			mb.RecordSystemMemoryUsageDataPoint(ts, 1, AttributeStateBuffered)

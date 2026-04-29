@@ -120,6 +120,7 @@ The metric will be become optional soon.
 | ---- | ----------- | ------ | ----------------- | ------------------- |
 | cpu | Logical CPU number starting at 0. | Any Str | Recommended | - |
 
+
 ### system.memory.usage
 
 Bytes of memory in use.

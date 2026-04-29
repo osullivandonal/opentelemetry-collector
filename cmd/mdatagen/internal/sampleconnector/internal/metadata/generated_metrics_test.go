@@ -110,7 +110,6 @@ func TestMetricsBuilder(t *testing.T) {
 			defaultMetricsCount := 0
 			allMetricsCount := 0
 			ebTestEntity := mb.ForTestEntity(NewTestEntityEntity("string.resource.attr-val"))
-
 			defaultMetricsCount++
 			allMetricsCount++
 			ebTestEntity.RecordDefaultMetricDataPoint(ts, 1, "string_attr-val", 19, AttributeEnumAttrRed, []any{"slice_attr-item1", "slice_attr-item2"}, map[string]any{"key1": "map_attr-val1", "key2": "map_attr-val2"})
@@ -120,7 +119,6 @@ func TestMetricsBuilder(t *testing.T) {
 			defaultMetricsCount++
 			allMetricsCount++
 			ebTestEntity.RecordDefaultMetricToBeRemovedDataPoint(ts, 1)
-
 			defaultMetricsCount++
 			allMetricsCount++
 			ebTestEntity.RecordMetricInputTypeDataPoint(ts, "1", "string_attr-val", 19, AttributeEnumAttrRed, []any{"slice_attr-item1", "slice_attr-item2"}, map[string]any{"key1": "map_attr-val1", "key2": "map_attr-val2"})
