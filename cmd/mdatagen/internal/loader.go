@@ -42,6 +42,8 @@ type TemplateContext struct {
 	Metadata
 	// Package name for generated code.
 	Package string
+	// ImportRootPath is the repo-local import prefix used to localize same-tree schema references.
+	ImportRootPath string
 }
 
 func LoadMetadata(filePath string) (Metadata, error) {
@@ -71,6 +73,10 @@ func LoadMetadata(filePath string) (Metadata, error) {
 	}
 	if md.GeneratedPackageName == "" {
 		md.GeneratedPackageName = "metadata"
+	}
+
+	if err := md.expandSemConvRefs(); err != nil {
+		return md, err
 	}
 
 	if err := md.Validate(); err != nil {

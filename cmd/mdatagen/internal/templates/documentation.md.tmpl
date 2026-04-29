@@ -17,24 +17,28 @@ Configuration key: `{{ $metricName }}`
 
 {{- end }}
 
-| Unit | Metric Type | Value Type |{{ if $metric.Data.HasAggregated }} Aggregation Temporality |{{ end }}{{ if $metric.Data.HasMonotonic }} Monotonic |{{ end }}{{ if $metric.Stability.Level }} Stability |{{ end }}{{ if $metric.SemanticConvention }} Semantic Convention |{{ end }}
-| ---- | ----------- | ---------- |{{ if $metric.Data.HasAggregated }} ----------------------- |{{ end }}{{ if $metric.Data.HasMonotonic }} --------- |{{ end }}{{ if $metric.Stability.Level }} --------- |{{ end }}{{ if $metric.SemanticConvention }} ------------------- |{{ end }}
+| Unit | Metric Type | Value Type |{{ if $metric.Data.HasAggregated }} Aggregation Temporality |{{ end }}{{ if $metric.Data.HasMonotonic }} Monotonic |{{ end }}{{ if $metric.Stability }} Stability |{{ end }}{{ if $metric.SemanticConvention }} Semantic Convention |{{ end }}
+| ---- | ----------- | ---------- |{{ if $metric.Data.HasAggregated }} ----------------------- |{{ end }}{{ if $metric.Data.HasMonotonic }} --------- |{{ end }}{{ if $metric.Stability }} --------- |{{ end }}{{ if $metric.SemanticConvention }} ------------------- |{{ end }}
 | {{ $metric.Unit }} | {{ $metric.Data.Type }} | {{ $metric.Data.MetricValueType }} |
 {{- if $metric.Data.HasAggregated }} {{ $metric.Data.AggregationTemporality }} |{{ end }}
 {{- if $metric.Data.HasMonotonic }} {{ $metric.Data.Monotonic }} |{{ end }}
-{{- if $metric.Stability.Level }} {{ $metric.Stability.Level }} |{{ end }}
+{{- if $metric.Stability }} {{ $metric.Stability }}{{ if $metric.Deprecated }} since {{ $metric.Deprecated.Since }}{{ end }} |{{ end }}
 {{- if $metric.SemanticConvention }} [{{ $metricName }}]({{ $metric.SemanticConvention.SemanticConventionRef }}) |{{ end }}
+{{- if $metric.Deprecated }}{{ if $metric.Deprecated.Note }}
+
+**Deprecation note**: {{ $metric.Deprecated.Note }}
+{{- end }}{{ end }}
 
 {{- if $metric.Attributes }}
 
 #### Attributes
 
-| Name | Description | Values | Requirement Level |
-| ---- | ----------- | ------ | -------- |
+| Name | Description | Values | Requirement Level | Semantic Convention |
+| ---- | ----------- | ------ | ----------------- | ------------------- |
 {{- range $metric.Attributes }}
 {{- $attribute := . | attributeInfo }}
 | {{ $attribute.Name }} | {{ $attribute.Description }} |
-{{- if $attribute.Enum }} {{ $attribute.Type }}: ``{{ stringsJoin $attribute.Enum "``, ``" }}``{{ else }} Any {{ $attribute.Type }}{{ end }} | {{ $attribute.RequirementLevel }} |
+{{- if $attribute.Enum }} {{ $attribute.Type }}: ``{{ stringsJoin $attribute.Enum "``, ``" }}``{{ else }} Any {{ $attribute.Type }}{{ end }} | {{ $attribute.RequirementLevel }} |{{ if $attribute.SemanticConvention }} [{{ $attribute.Name }}]({{ $attribute.SemanticConvention.SemanticConventionRef }}) |{{ else }} - |{{ end }}
 {{- end }}
 
 {{- end }}
@@ -59,12 +63,12 @@ Configuration key: `{{ $metricName }}`
 
 #### Attributes
 
-| Name | Description | Values |
-| ---- | ----------- | ------ |
+| Name | Description | Values | Semantic Convention |
+| ---- | ----------- | ------ | ------------------- |
 {{- range $event.Attributes }}
 {{- $attribute := . | attributeInfo }}
 | {{ $attribute.Name }} | {{ $attribute.Description }} |
-{{- if $attribute.Enum }} {{ $attribute.Type }}: ``{{ stringsJoin $attribute.Enum "``, ``" }}``{{ else }} Any {{ $attribute.Type }}{{ end }} |
+{{- if $attribute.Enum }} {{ $attribute.Type }}: ``{{ stringsJoin $attribute.Enum "``, ``" }}``{{ else }} Any {{ $attribute.Type }}{{ end }} |{{ if $attribute.SemanticConvention }} [{{ $attribute.Name }}]({{ $attribute.SemanticConvention.SemanticConventionRef }}) |{{ else }} - |{{ end }}
 {{- end }}
 
 {{- end }}
@@ -77,7 +81,14 @@ Configuration key: `{{ $metricName }}`
 
 ### {{ if $metric.Prefix -}}{{ $metric.Prefix }}{{- else -}}otelcol_{{- end -}}{{ $metricName }}
 
-{{ $metric.Description }}{{ $metric.Stability }}
+{{ $metric.Description }}
+{{- if $metric.Deprecated }}
+
+> **Deprecated since {{ $metric.Deprecated.Since}}**
+{{- if $metric.Deprecated.Note }}
+> {{ $metric.Deprecated.Note }}
+{{- end }}
+{{- end }}
 
 {{- if $metric.ExtendedDocumentation }}
 
@@ -85,23 +96,27 @@ Configuration key: `{{ $metricName }}`
 
 {{- end }}
 
-| Unit | Metric Type | Value Type |{{ if $metric.Data.HasMonotonic }} Monotonic |{{ end }}{{ if $metric.Stability.Level }} Stability |{{ end }}{{ if $metric.SemanticConvention }} Semantic Convention |{{ end }}
-| ---- | ----------- | ---------- |{{ if $metric.Data.HasMonotonic }} --------- |{{ end }}{{ if $metric.Stability.Level }} --------- |{{ end }}{{ if $metric.SemanticConvention }} ------------------- |{{ end }}
+| Unit | Metric Type | Value Type |{{ if $metric.Data.HasMonotonic }} Monotonic |{{ end }}{{ if $metric.Stability }} Stability |{{ end }}{{ if $metric.SemanticConvention }} Semantic Convention |{{ end }}
+| ---- | ----------- | ---------- |{{ if $metric.Data.HasMonotonic }} --------- |{{ end }}{{ if $metric.Stability }} --------- |{{ end }}{{ if $metric.SemanticConvention }} ------------------- |{{ end }}
 | {{ $metric.Unit }} | {{ $metric.Data.Type }} | {{ $metric.Data.MetricValueType }} |
 {{- if $metric.Data.HasMonotonic }} {{ $metric.Data.Monotonic }} |{{ end }}
-{{- if $metric.Stability.Level }} {{ $metric.Stability.Level }} |{{ end }}
+{{- if $metric.Stability }} {{ $metric.Stability }}{{ if $metric.Deprecated }} since {{ $metric.Deprecated.Since }}{{ end }} |{{ end }}
 {{- if $metric.SemanticConvention }} [{{ $metricName }}]({{ $metric.SemanticConvention.SemanticConventionRef }}) |{{ end }}
+{{- if $metric.Deprecated }}{{ if $metric.Deprecated.Note }}
+
+**Deprecation note**: {{ $metric.Deprecated.Note }}
+{{- end }}{{ end }}
 
 {{- if $metric.Attributes }}
 
 #### Attributes
 
-| Name | Description | Values |
-| ---- | ----------- | ------ |
+| Name | Description | Values | Semantic Convention |
+| ---- | ----------- | ------ | ------------------- |
 {{- range $metric.Attributes }}
 {{- $attribute := . | attributeInfo }}
 | {{ $attribute.Name }} | {{ $attribute.Description }} |
-{{- if $attribute.Enum }} {{ $attribute.Type }}: ``{{ stringsJoin $attribute.Enum "``, ``" }}``{{ else }} Any {{ $attribute.Type }}{{ end }} |
+{{- if $attribute.Enum }} {{ $attribute.Type }}: ``{{ stringsJoin $attribute.Enum "``, ``" }}``{{ else }} Any {{ $attribute.Type }}{{ end }} |{{ if $attribute.SemanticConvention }} [{{ $attribute.Name }}]({{ $attribute.SemanticConvention.SemanticConventionRef }}) |{{ else }} - |{{ end }}
 {{- end }}
 
 {{- end }}
@@ -210,11 +225,11 @@ events:
 
 ## Resource Attributes
 
-| Name | Description | Values | Enabled |
-| ---- | ----------- | ------ | ------- |
+| Name | Description | Values | Enabled | Semantic Convention |
+| ---- | ----------- | ------ | ------- | ------------------- |
 {{- range $attributeName, $attribute := .ResourceAttributes }}
 | {{ $attributeName }} | {{ $attribute.Description }} |
-{{- if $attribute.Enum }} {{ $attribute.Type }}: ``{{ stringsJoin $attribute.Enum "``, ``" }}``{{ else }} Any {{ $attribute.Type }}{{ end }} | {{ $attribute.Enabled }} |
+{{- if $attribute.Enum }} {{ $attribute.Type }}: ``{{ stringsJoin $attribute.Enum "``, ``" }}``{{ else }} Any {{ $attribute.Type }}{{ end }} | {{ $attribute.Enabled }} |{{ if $attribute.SemanticConvention }} [{{ $attributeName }}]({{ $attribute.SemanticConvention.SemanticConventionRef }}) |{{ else }} - |{{ end }}
 {{- end }}
 
 {{- end }}

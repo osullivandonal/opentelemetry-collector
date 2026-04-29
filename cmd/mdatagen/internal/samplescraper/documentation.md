@@ -25,13 +25,13 @@ The metric will be become optional soon.
 
 #### Attributes
 
-| Name | Description | Values | Requirement Level |
-| ---- | ----------- | ------ | -------- |
-| string_attr | Attribute with any string value. | Any Str | Recommended |
-| state | Integer attribute with overridden name. | Any Int | Recommended |
-| enum_attr | Attribute with a known set of string values. | Str: ``red``, ``green``, ``blue`` | Recommended |
-| slice_attr | Attribute with a slice value. | Any Slice | Recommended |
-| map_attr | Attribute with a map value. | Any Map | Recommended |
+| Name | Description | Values | Requirement Level | Semantic Convention |
+| ---- | ----------- | ------ | ----------------- | ------------------- |
+| string_attr | Attribute with any string value. | Any Str | Recommended | - |
+| state | Integer attribute with overridden name. | Any Int | Recommended | - |
+| enum_attr | Attribute with a known set of string values. | Str: ``red``, ``green``, ``blue`` | Recommended | - |
+| slice_attr | Attribute with a slice value. | Any Slice | Recommended | - |
+| map_attr | Attribute with a map value. | Any Map | Recommended | - |
 
 
 ### default.metric.to_be_removed
@@ -42,7 +42,9 @@ The metric will be removed soon.
 
 | Unit | Metric Type | Value Type | Aggregation Temporality | Monotonic | Stability |
 | ---- | ----------- | ---------- | ----------------------- | --------- | --------- |
-| s | Sum | Double | Delta | false | Deprecated |
+| s | Sum | Double | Delta | false | Deprecated since 1.0.0 |
+
+**Deprecation note**: This metric will be removed
 
 
 ### metric.input_type
@@ -55,18 +57,18 @@ Monotonic cumulative sum int metric with string input_type enabled by default.
 
 #### Attributes
 
-| Name | Description | Values | Requirement Level |
-| ---- | ----------- | ------ | -------- |
-| string_attr | Attribute with any string value. | Any Str | Recommended |
-| state | Integer attribute with overridden name. | Any Int | Recommended |
-| enum_attr | Attribute with a known set of string values. | Str: ``red``, ``green``, ``blue`` | Recommended |
-| slice_attr | Attribute with a slice value. | Any Slice | Recommended |
-| map_attr | Attribute with a map value. | Any Map | Recommended |
+| Name | Description | Values | Requirement Level | Semantic Convention |
+| ---- | ----------- | ------ | ----------------- | ------------------- |
+| string_attr | Attribute with any string value. | Any Str | Recommended | - |
+| state | Integer attribute with overridden name. | Any Int | Recommended | - |
+| enum_attr | Attribute with a known set of string values. | Str: ``red``, ``green``, ``blue`` | Recommended | - |
+| slice_attr | Attribute with a slice value. | Any Slice | Recommended | - |
+| map_attr | Attribute with a map value. | Any Map | Recommended | - |
 
 
 ### reaggregate.metric
 
-Metric for testing spacial reaggregation
+Metric for testing spatial reaggregation
 
 | Unit | Metric Type | Value Type | Stability |
 | ---- | ----------- | ---------- | --------- |
@@ -74,10 +76,10 @@ Metric for testing spacial reaggregation
 
 #### Attributes
 
-| Name | Description | Values | Requirement Level |
-| ---- | ----------- | ------ | -------- |
-| string_attr | Attribute with any string value. | Any Str | Recommended |
-| boolean_attr | Attribute with a boolean value. | Any Bool | Recommended |
+| Name | Description | Values | Requirement Level | Semantic Convention |
+| ---- | ----------- | ------ | ----------------- | ------------------- |
+| string_attr | Attribute with any string value. | Any Str | Recommended | - |
+| boolean_attr | Attribute with a boolean value. | Any Bool | Recommended | - |
 
 
 ### system.cpu.time
@@ -88,7 +90,7 @@ The metric will be become optional soon.
 
 | Unit | Metric Type | Value Type | Aggregation Temporality | Monotonic | Stability | Semantic Convention |
 | ---- | ----------- | ---------- | ----------------------- | --------- | --------- | ------------------- |
-| s | Sum | Int | Cumulative | true | Beta | [system.cpu.time](https://github.com/open-telemetry/semantic-conventions/blob/v1.38.0/docs/system/system-metrics.md#metric-systemcputime) |
+| s | Sum | Int | Cumulative | true | Beta | [system.cpu.time](https://github.com/open-telemetry/semantic-conventions/blob/v1.40.0/docs/system/system-metrics.md#metric-systemcputime) |
 
 ## Optional Metrics
 
@@ -107,15 +109,17 @@ metrics:
 
 | Unit | Metric Type | Value Type | Stability |
 | ---- | ----------- | ---------- | --------- |
-| 1 | Gauge | Double | Deprecated |
+| 1 | Gauge | Double | Deprecated since 1.0.0 |
+
+**Deprecation note**: This metric will be removed
 
 #### Attributes
 
-| Name | Description | Values | Requirement Level |
-| ---- | ----------- | ------ | -------- |
-| string_attr | Attribute with any string value. | Any Str | Recommended |
-| boolean_attr | Attribute with a boolean value. | Any Bool | Recommended |
-| boolean_attr2 | Another attribute with a boolean value. | Any Bool | Recommended |
+| Name | Description | Values | Requirement Level | Semantic Convention |
+| ---- | ----------- | ------ | ----------------- | ------------------- |
+| string_attr | Attribute with any string value. | Any Str | Recommended | - |
+| boolean_attr | Attribute with a boolean value. | Any Bool | Recommended | - |
+| boolean_attr2 | Another attribute with a boolean value. | Any Bool | Recommended | - |
 
 
 ### optional.metric.empty_unit
@@ -124,24 +128,26 @@ metrics:
 
 | Unit | Metric Type | Value Type | Stability |
 | ---- | ----------- | ---------- | --------- |
-|  | Gauge | Double | Deprecated |
+|  | Gauge | Double | Deprecated since 1.0.0 |
+
+**Deprecation note**: This metric will be removed
 
 #### Attributes
 
-| Name | Description | Values | Requirement Level |
-| ---- | ----------- | ------ | -------- |
-| string_attr | Attribute with any string value. | Any Str | Recommended |
-| boolean_attr | Attribute with a boolean value. | Any Bool | Recommended |
+| Name | Description | Values | Requirement Level | Semantic Convention |
+| ---- | ----------- | ------ | ----------------- | ------------------- |
+| string_attr | Attribute with any string value. | Any Str | Recommended | - |
+| boolean_attr | Attribute with a boolean value. | Any Bool | Recommended | - |
 
 ## Resource Attributes
 
-| Name | Description | Values | Enabled |
-| ---- | ----------- | ------ | ------- |
-| map.resource.attr | Resource attribute with a map value. | Any Map | true |
-| optional.resource.attr | Explicitly disabled ResourceAttribute. | Any Str | false |
-| slice.resource.attr | Resource attribute with a slice value. | Any Slice | true |
-| string.enum.resource.attr | Resource attribute with a known set of string values. | Str: ``one``, ``two`` | true |
-| string.resource.attr | Resource attribute with any string value. | Any Str | true |
-| string.resource.attr_disable_warning | Resource attribute with any string value. | Any Str | true |
-| string.resource.attr_remove_warning | Resource attribute with any string value. | Any Str | false |
-| string.resource.attr_to_be_removed | Resource attribute with any string value. | Any Str | true |
+| Name | Description | Values | Enabled | Semantic Convention |
+| ---- | ----------- | ------ | ------- | ------------------- |
+| map.resource.attr | Resource attribute with a map value. | Any Map | true | - |
+| optional.resource.attr | Explicitly disabled ResourceAttribute. | Any Str | false | - |
+| slice.resource.attr | Resource attribute with a slice value. | Any Slice | true | - |
+| string.enum.resource.attr | Resource attribute with a known set of string values. | Str: ``one``, ``two`` | true | - |
+| string.resource.attr | Resource attribute with any string value. | Any Str | true | - |
+| string.resource.attr_disable_warning | Resource attribute with any string value. | Any Str | true | - |
+| string.resource.attr_remove_warning | Resource attribute with any string value. | Any Str | false | - |
+| string.resource.attr_to_be_removed | Resource attribute with any string value. | Any Str | true | - |
