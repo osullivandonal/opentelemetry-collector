@@ -22,6 +22,13 @@ var reNonAlnum = regexp.MustCompile(`[^a-z0-9_]+`)
 
 type MetricName string
 
+func (mn MetricName) EmittedName() string {
+	if emittedName, _, ok := strings.Cut(string(mn), "@"); ok {
+		return emittedName
+	}
+	return string(mn)
+}
+
 func (mn MetricName) Render() (string, error) {
 	return helpers.FormatIdentifier(string(mn), true)
 }
@@ -32,12 +39,6 @@ func (mn MetricName) RenderUnexported() (string, error) {
 
 type Metric struct {
 	Signal `mapstructure:",squash"`
-
-	// Name overrides the emitted metric name. If not set, the map key is used.
-	// This is useful for versioned metrics where the config key is "metric.name/v2"
-	// but the emitted metric name should be "metric.name".
-	Name string `mapstructure:"name"`
-
 	// This indicates if the metric is versioned are not. This helps with generated code.
 	// The reason for this is if the metric is versioned a metric name can be duplicated.
 	Versioned bool `mapstructure:"-"`

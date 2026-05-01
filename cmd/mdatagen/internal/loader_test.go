@@ -474,7 +474,6 @@ func TestLoadMetadata(t *testing.T) {
 						},
 					},
 					"versioned.metric@v1": {
-						Name:      "versioned.metric",
 						Versioned: true,
 						Signal: Signal{
 							Enabled:     true,
@@ -869,22 +868,22 @@ func TestSetMetricDefaultFields(t *testing.T) {
 				"system.cpu.time@v2": {Signal: Signal{Description: "test"}},
 			},
 			expected: map[MetricName]Metric{
-				"system.cpu.time@v2": {Name: "system.cpu.time", Signal: Signal{Description: "test"}, Versioned: true},
+				"system.cpu.time@v2": {Signal: Signal{Description: "test"}, Versioned: true},
 			},
 		},
 		{
 			name: "name already set",
 			input: map[MetricName]Metric{
-				"some.key": {Name: "custom.name", Signal: Signal{Description: "test"}},
+				"some.key": {Signal: Signal{Description: "test"}},
 			},
 			expected: map[MetricName]Metric{
-				"some.key": {Name: "custom.name", Signal: Signal{Description: "test"}}, // unchanged
+				"some.key": {Signal: Signal{Description: "test"}}, // unchanged
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			setMetricDefaultFields(tt.input)
+			setMetricVersioned(tt.input)
 			require.Equal(t, tt.expected, tt.input)
 		})
 	}
@@ -896,15 +895,11 @@ func TestVersionedMetricName(t *testing.T) {
 
 	// Legacy metric - Name should be empty (uses map key)
 	legacy := md.Metrics["system.cpu.time"]
-	require.Empty(t, legacy.Name)
+	require.False(t, legacy.Versioned)
 
 	// Versioned metric - Name should be auto-populated from key
 	versioned := md.Metrics["system.cpu.time@v2"]
-	require.Equal(t, "system.cpu.time", versioned.Name)
-
-	// Explicit name override
-	custom := md.Metrics["custom.metric.key"]
-	require.Equal(t, "actual.metric.name", custom.Name)
+	require.True(t, versioned.Versioned)
 }
 
 func strPtr(s string) *string {

@@ -12,7 +12,6 @@ metrics:
     enabled: false
 ```
 
-
 ### default.metric
 
 Monotonic cumulative sum int metric enabled by default.
@@ -38,7 +37,6 @@ The metric will be become optional soon.
 | conditional_string_attr | A conditional attribute with any string value | Any Str | Conditionally Required | - |
 | opt_in_bool_attr | An opt-in attribute with a boolean value | Any Bool | Opt-In | - |
 
-
 ### default.metric.to_be_removed
 
 [DEPRECATED] Non-monotonic delta sum double metric enabled by default.
@@ -50,7 +48,6 @@ The metric will be removed soon.
 | s | Sum | Double | Delta | false | Deprecated since 1.0.0 |
 
 **Deprecation note**: This metric will be removed
-
 
 ### metric.input_type
 
@@ -70,7 +67,6 @@ Monotonic cumulative sum int metric with string input_type enabled by default.
 | slice_attr | Attribute with a slice value. | Any Slice | Recommended | - |
 | map_attr | Attribute with a map value. | Any Map | Recommended | - |
 
-
 ### reaggregate.metric
 
 Metric for testing spatial reaggregation
@@ -85,7 +81,6 @@ Metric for testing spatial reaggregation
 | ---- | ----------- | ------ | ----------------- | ------------------- |
 | string_attr | Attribute with any string value. | Any Str | Recommended | - |
 | boolean_attr | Attribute with a boolean value. | Any Bool | Recommended | - |
-
 
 ### reaggregate.metric.with_required
 
@@ -103,7 +98,6 @@ Metric for testing spatial reaggregation with required attributes
 | string_attr | Attribute with any string value. | Any Str | Recommended | - |
 | boolean_attr | Attribute with a boolean value. | Any Bool | Recommended | - |
 
-
 ### system.cpu.time
 
 Monotonic cumulative sum int metric enabled by default.
@@ -120,7 +114,6 @@ The metric will be become optional soon.
 | ---- | ----------- | ------ | ----------------- | ------------------- |
 | cpu | Logical CPU number starting at 0. | Any Str | Recommended | - |
 
-
 ### system.memory.usage
 
 Bytes of memory in use.
@@ -134,7 +127,6 @@ Bytes of memory in use.
 | Name | Description | Values | Requirement Level | Semantic Convention |
 | ---- | ----------- | ------ | ----------------- | ------------------- |
 | state | Breakdown of memory usage by type. | Str: ``buffered``, ``cached``, ``inactive``, ``free``, ``slab_reclaimable``, ``slab_unreclaimable``, ``used`` | Recommended | [state](https://github.com/open-telemetry/semantic-conventions/blob/v1.40.0/docs/registry/attributes/system.md#system-memory-state) |
-
 
 ### versioned.metric
 
@@ -152,9 +144,7 @@ Versioned metric showcasing the usage of the '@' symbol
 | string_attr | Attribute with any string value. | Any Str | Recommended | - |
 | boolean_attr | Attribute with a boolean value. | Any Bool | Recommended | - |
 
-
 ### versioned.metric
-Configuration key: `versioned.metric@v1`
 
 Versioned metric showcasing the usage of the '@' symbol
 
@@ -180,7 +170,6 @@ metrics:
     enabled: true
 ```
 
-
 ### optional.metric
 
 [DEPRECATED] Gauge double metric disabled by default.
@@ -199,7 +188,6 @@ metrics:
 | boolean_attr | Attribute with a boolean value. | Any Bool | Recommended | - |
 | boolean_attr2 | Another attribute with a boolean value. | Any Bool | Recommended | - |
 | conditional_string_attr | A conditional attribute with any string value | Any Str | Conditionally Required | - |
-
 
 ### optional.metric.empty_unit
 

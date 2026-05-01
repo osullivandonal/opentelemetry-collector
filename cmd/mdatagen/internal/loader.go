@@ -25,15 +25,11 @@ func setAttributeDefaultFields(attrs map[AttributeName]Attribute) {
 	}
 }
 
-func setMetricDefaultFields(metrics map[MetricName]Metric) {
+func setMetricVersioned(metrics map[MetricName]Metric) {
 	for k, v := range metrics {
 		keyStr := string(k)
-		// if withoutSlash, _, found := strings.Cut(keyStr, "/"); found {
-		if withoutAt, _, found := strings.Cut(keyStr, "@"); found {
+		if _, _, found := strings.Cut(keyStr, "@"); found {
 			v.Versioned = true
-			if v.Name == "" {
-				v.Name = withoutAt
-			}
 			metrics[k] = v
 		}
 	}
@@ -86,8 +82,8 @@ func LoadMetadata(filePath string) (Metadata, error) {
 
 	setAttributeDefaultFields(md.Attributes)
 	setAttributeDefaultFields(md.ResourceAttributes)
-	setMetricDefaultFields(md.Metrics)
-	setMetricDefaultFields(md.Telemetry.Metrics)
+	setMetricVersioned(md.Metrics)
+	setMetricVersioned(md.Telemetry.Metrics)
 
 	return md, nil
 }

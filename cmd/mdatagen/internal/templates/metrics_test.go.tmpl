@@ -247,7 +247,7 @@ func TestMetricsBuilder(t *testing.T) {
 				switch mi.Name() {
 				{{- range $name, $metric := .Metrics }}
         {{- if not $metric.Versioned }}
-        case "{{- if $metric.Name }}{{ $metric.Name }}{{ else }}{{ $name }}{{ end }}":
+        case "{{ $name.EmittedName }}":
 					{{- if and $reag (hasAggregatableAttributes $metric.Attributes) }}
 					if tt.name != "reaggregate_set" {
 						assert.False(t, validatedMetrics["{{ $name }}"], "Found a duplicate in the metrics slice: {{ $name }}")

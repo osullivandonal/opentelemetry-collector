@@ -26,8 +26,7 @@ metrics:
       if_enabled: This metric is deprecated, use system.cpu.time/v2 instead.
   # New semconv metric - different config key, same emitted name
   system.cpu.time@v2:
-    name: system.cpu.time
-    enabled: false
+    enabled: true
     description: CPU time metric per new semantic conventions
     stability: beta
     unit: s
@@ -38,7 +37,6 @@ metrics:
     attributes: [state]
   # Metric with explicit name override (different from key)
   custom.metric.key:
-    name: actual.metric.name
     enabled: true
     description: Metric with custom name
     stability: alpha
