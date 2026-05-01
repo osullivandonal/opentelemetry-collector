@@ -334,6 +334,26 @@ metrics:
       monotonic: false
     attributes: [state]
 
+  versioned.metric:
+    enabled: true
+    description: Versioned metric showcasing the usage of the '@' symbol
+    unit: "1"
+    stability: beta
+    gauge:
+      value_type: double
+    attributes: [required_string_attr, string_attr, boolean_attr]
+
+  versioned.metric@v1:
+    enabled: true
+    description: Versioned metric showcasing the usage of the '@' symbol
+    unit: "1"
+    stability: stable
+    sum:
+      value_type: int
+      monotonic: false
+      aggregation_temporality: cumulative
+    attributes: [required_string_attr, string_attr, boolean_attr]
+
 telemetry:
   metrics:
     batch_size_trigger_send:

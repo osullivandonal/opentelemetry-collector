@@ -10,7 +10,6 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
 	"go.opentelemetry.io/collector/confmap"
 	"go.opentelemetry.io/collector/confmap/confmaptest"
 )
@@ -70,6 +69,16 @@ func TestMetricsBuilderConfig(t *testing.T) {
 						Enabled:             true,
 						AggregationStrategy: AggregationStrategySum,
 						EnabledAttributes:   []SystemMemoryUsageMetricAttributeKey{SystemMemoryUsageMetricAttributeKeyState},
+					},
+					VersionedMetric: VersionedMetricMetricConfig{
+						Enabled:             true,
+						AggregationStrategy: AggregationStrategyAvg,
+						EnabledAttributes:   []VersionedMetricMetricAttributeKey{VersionedMetricMetricAttributeKeyRequiredStringAttr, VersionedMetricMetricAttributeKeyStringAttr, VersionedMetricMetricAttributeKeyBooleanAttr},
+					},
+					VersionedMetricV1: VersionedMetricV1MetricConfig{
+						Enabled:             true,
+						AggregationStrategy: AggregationStrategySum,
+						EnabledAttributes:   []VersionedMetricV1MetricAttributeKey{VersionedMetricV1MetricAttributeKeyRequiredStringAttr, VersionedMetricV1MetricAttributeKeyStringAttr, VersionedMetricV1MetricAttributeKeyBooleanAttr},
 					},
 				},
 				ResourceAttributes: ResourceAttributesConfig{
@@ -132,6 +141,16 @@ func TestMetricsBuilderConfig(t *testing.T) {
 						AggregationStrategy: AggregationStrategySum,
 						EnabledAttributes:   []SystemMemoryUsageMetricAttributeKey{SystemMemoryUsageMetricAttributeKeyState},
 					},
+					VersionedMetric: VersionedMetricMetricConfig{
+						Enabled:             false,
+						AggregationStrategy: AggregationStrategyAvg,
+						EnabledAttributes:   []VersionedMetricMetricAttributeKey{VersionedMetricMetricAttributeKeyRequiredStringAttr, VersionedMetricMetricAttributeKeyStringAttr, VersionedMetricMetricAttributeKeyBooleanAttr},
+					},
+					VersionedMetricV1: VersionedMetricV1MetricConfig{
+						Enabled:             false,
+						AggregationStrategy: AggregationStrategySum,
+						EnabledAttributes:   []VersionedMetricV1MetricAttributeKey{VersionedMetricV1MetricAttributeKeyRequiredStringAttr, VersionedMetricV1MetricAttributeKeyStringAttr, VersionedMetricV1MetricAttributeKeyBooleanAttr},
+					},
 				},
 				ResourceAttributes: ResourceAttributesConfig{
 					MapResourceAttr:                       MapResourceAttrResourceAttributeConfig{Enabled: false},
@@ -150,7 +169,7 @@ func TestMetricsBuilderConfig(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cfg := loadMetricsBuilderConfig(t, tt.name)
-			diff := cmp.Diff(tt.want, cfg, cmpopts.IgnoreUnexported(DefaultMetricMetricConfig{}, DefaultMetricToBeRemovedMetricConfig{}, MetricInputTypeMetricConfig{}, OptionalMetricMetricConfig{}, OptionalMetricEmptyUnitMetricConfig{}, ReaggregateMetricMetricConfig{}, ReaggregateMetricWithRequiredMetricConfig{}, SystemCPUTimeMetricConfig{}, SystemMemoryUsageMetricConfig{}, MapResourceAttrResourceAttributeConfig{}, OptionalResourceAttrResourceAttributeConfig{}, SliceResourceAttrResourceAttributeConfig{}, StringEnumResourceAttrResourceAttributeConfig{}, StringResourceAttrResourceAttributeConfig{}, StringResourceAttrDisableWarningResourceAttributeConfig{}, StringResourceAttrRemoveWarningResourceAttributeConfig{}, StringResourceAttrToBeRemovedResourceAttributeConfig{}, StringResourceDisabledAttrToBeRemovedResourceAttributeConfig{}))
+			diff := cmp.Diff(tt.want, cfg, cmpopts.IgnoreUnexported(DefaultMetricMetricConfig{}, DefaultMetricToBeRemovedMetricConfig{}, MetricInputTypeMetricConfig{}, OptionalMetricMetricConfig{}, OptionalMetricEmptyUnitMetricConfig{}, ReaggregateMetricMetricConfig{}, ReaggregateMetricWithRequiredMetricConfig{}, SystemCPUTimeMetricConfig{}, SystemMemoryUsageMetricConfig{}, VersionedMetricMetricConfig{}, VersionedMetricV1MetricConfig{}, MapResourceAttrResourceAttributeConfig{}, OptionalResourceAttrResourceAttributeConfig{}, SliceResourceAttrResourceAttributeConfig{}, StringEnumResourceAttrResourceAttributeConfig{}, StringResourceAttrResourceAttributeConfig{}, StringResourceAttrDisableWarningResourceAttributeConfig{}, StringResourceAttrRemoveWarningResourceAttributeConfig{}, StringResourceAttrToBeRemovedResourceAttributeConfig{}, StringResourceDisabledAttrToBeRemovedResourceAttributeConfig{}))
 			require.Emptyf(t, diff, "Config mismatch (-expected +actual):\n%s", diff)
 		})
 	}

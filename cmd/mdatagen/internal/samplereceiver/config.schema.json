@@ -312,6 +312,78 @@
                   "default": true
                 }
               }
+            },
+            "versioned.metric": {
+              "description": "VersionedMetricMetricConfig provides config for the versioned.metric metric.",
+              "type": "object",
+              "properties": {
+                "aggregation_strategy": {
+                  "type": "string",
+                  "default": "avg",
+                  "enum": [
+                    "sum",
+                    "avg",
+                    "min",
+                    "max"
+                  ]
+                },
+                "attributes": {
+                  "type": "array",
+                  "default": [
+                    "required_string_attr",
+                    "string_attr",
+                    "boolean_attr"
+                  ],
+                  "items": {
+                    "type": "string",
+                    "enum": [
+                      "required_string_attr",
+                      "string_attr",
+                      "boolean_attr"
+                    ]
+                  }
+                },
+                "enabled": {
+                  "type": "boolean",
+                  "default": true
+                }
+              }
+            },
+            "versioned.metric@v1": {
+              "description": "VersionedMetricV1MetricConfig provides config for the versioned.metric@v1 metric.",
+              "type": "object",
+              "properties": {
+                "aggregation_strategy": {
+                  "type": "string",
+                  "default": "sum",
+                  "enum": [
+                    "sum",
+                    "avg",
+                    "min",
+                    "max"
+                  ]
+                },
+                "attributes": {
+                  "type": "array",
+                  "default": [
+                    "required_string_attr",
+                    "string_attr",
+                    "boolean_attr"
+                  ],
+                  "items": {
+                    "type": "string",
+                    "enum": [
+                      "required_string_attr",
+                      "string_attr",
+                      "boolean_attr"
+                    ]
+                  }
+                },
+                "enabled": {
+                  "type": "boolean",
+                  "default": true
+                }
+              }
             }
           }
         },

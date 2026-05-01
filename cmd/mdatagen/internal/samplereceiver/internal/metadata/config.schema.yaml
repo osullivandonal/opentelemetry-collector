@@ -230,6 +230,60 @@ $defs:
                 - "state"
             default:
               - "state"
+      versioned.metric:
+        description: "VersionedMetricMetricConfig provides config for the versioned.metric metric."
+        type: object
+        properties:
+          enabled:
+            type: boolean
+            default: true
+          aggregation_strategy:
+            type: string
+            enum:
+              - "sum"
+              - "avg"
+              - "min"
+              - "max"
+            default: "avg"
+          attributes:
+            type: array
+            items:
+              type: string
+              enum:
+                - "required_string_attr"
+                - "string_attr"
+                - "boolean_attr"
+            default:
+              - "required_string_attr"
+              - "string_attr"
+              - "boolean_attr"
+      versioned.metric@v1:
+        description: "VersionedMetricV1MetricConfig provides config for the versioned.metric@v1 metric."
+        type: object
+        properties:
+          enabled:
+            type: boolean
+            default: true
+          aggregation_strategy:
+            type: string
+            enum:
+              - "sum"
+              - "avg"
+              - "min"
+              - "max"
+            default: "sum"
+          attributes:
+            type: array
+            items:
+              type: string
+              enum:
+                - "required_string_attr"
+                - "string_attr"
+                - "boolean_attr"
+            default:
+              - "required_string_attr"
+              - "string_attr"
+              - "boolean_attr"
   events_config:
     description: EventsConfig provides config for sample events.
     type: object

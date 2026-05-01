@@ -135,6 +135,41 @@ Bytes of memory in use.
 | ---- | ----------- | ------ | ----------------- | ------------------- |
 | state | Breakdown of memory usage by type. | Str: ``buffered``, ``cached``, ``inactive``, ``free``, ``slab_reclaimable``, ``slab_unreclaimable``, ``used`` | Recommended | [state](https://github.com/open-telemetry/semantic-conventions/blob/v1.40.0/docs/registry/attributes/system.md#system-memory-state) |
 
+
+### versioned.metric
+
+Versioned metric showcasing the usage of the '@' symbol
+
+| Unit | Metric Type | Value Type | Stability |
+| ---- | ----------- | ---------- | --------- |
+| 1 | Gauge | Double | Beta |
+
+#### Attributes
+
+| Name | Description | Values | Requirement Level | Semantic Convention |
+| ---- | ----------- | ------ | ----------------- | ------------------- |
+| required_string_attr | A required attribute with a string value | Any Str | Required | - |
+| string_attr | Attribute with any string value. | Any Str | Recommended | - |
+| boolean_attr | Attribute with a boolean value. | Any Bool | Recommended | - |
+
+
+### versioned.metric
+Configuration key: `versioned.metric@v1`
+
+Versioned metric showcasing the usage of the '@' symbol
+
+| Unit | Metric Type | Value Type | Aggregation Temporality | Monotonic | Stability |
+| ---- | ----------- | ---------- | ----------------------- | --------- | --------- |
+| 1 | Sum | Int | Cumulative | false | Stable |
+
+#### Attributes
+
+| Name | Description | Values | Requirement Level | Semantic Convention |
+| ---- | ----------- | ------ | ----------------- | ------------------- |
+| required_string_attr | A required attribute with a string value | Any Str | Required | - |
+| string_attr | Attribute with any string value. | Any Str | Recommended | - |
+| boolean_attr | Attribute with a boolean value. | Any Bool | Recommended | - |
+
 ## Optional Metrics
 
 The following metrics are not emitted by default. Each of them can be enabled by applying the following configuration:

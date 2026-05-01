@@ -461,6 +461,36 @@ func TestLoadMetadata(t *testing.T) {
 							Mono:                   Mono{Monotonic: true},
 						},
 					},
+					"versioned.metric": {
+						Signal: Signal{
+							Enabled:     true,
+							Description: "Versioned metric showcasing the usage of the '@' symbol",
+							Stability:   component.StabilityLevelBeta,
+							Attributes:  []AttributeName{"required_string_attr", "string_attr", "boolean_attr"},
+						},
+						Unit: strPtr("1"),
+						Gauge: &Gauge{
+							MetricValueType: MetricValueType{pmetric.NumberDataPointValueTypeDouble},
+						},
+					},
+					"versioned.metric@v1": {
+						Name:      "versioned.metric",
+						Versioned: true,
+						Signal: Signal{
+							Enabled:     true,
+							Description: "Versioned metric showcasing the usage of the '@' symbol",
+							Stability:   component.StabilityLevelStable,
+							Attributes:  []AttributeName{"required_string_attr", "string_attr", "boolean_attr"},
+						},
+						Unit: strPtr("1"),
+						Sum: &Sum{
+							MetricValueType: MetricValueType{
+								pmetric.NumberDataPointValueTypeInt,
+							},
+							Mono:                   Mono{Monotonic: false},
+							AggregationTemporality: AggregationTemporality{Aggregation: pmetric.AggregationTemporalityCumulative},
+						},
+					},
 				},
 				Events: map[EventName]Event{
 					"default.event": {
@@ -834,12 +864,12 @@ func TestSetMetricDefaultFields(t *testing.T) {
 			},
 		},
 		{
-			name: "no name set, slash in key",
+			name: "no name set, At ('@') in key",
 			input: map[MetricName]Metric{
-				"system.cpu.time/v2": {Signal: Signal{Description: "test"}},
+				"system.cpu.time@v2": {Signal: Signal{Description: "test"}},
 			},
 			expected: map[MetricName]Metric{
-				"system.cpu.time/v2": {Name: "system.cpu.time", Signal: Signal{Description: "test"}, Versioned: true},
+				"system.cpu.time@v2": {Name: "system.cpu.time", Signal: Signal{Description: "test"}, Versioned: true},
 			},
 		},
 		{
@@ -869,7 +899,7 @@ func TestVersionedMetricName(t *testing.T) {
 	require.Empty(t, legacy.Name)
 
 	// Versioned metric - Name should be auto-populated from key
-	versioned := md.Metrics["system.cpu.time/v2"]
+	versioned := md.Metrics["system.cpu.time@v2"]
 	require.Equal(t, "system.cpu.time", versioned.Name)
 
 	// Explicit name override

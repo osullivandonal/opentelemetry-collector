@@ -436,6 +436,112 @@ func (ms *SystemMemoryUsageMetricConfig) Validate() error {
 	return nil
 }
 
+// VersionedMetricMetricAttributeKey specifies the key of an attribute for the versioned.metric metric.
+type VersionedMetricMetricAttributeKey string
+
+const (
+	VersionedMetricMetricAttributeKeyRequiredStringAttr VersionedMetricMetricAttributeKey = "required_string_attr"
+	VersionedMetricMetricAttributeKeyStringAttr         VersionedMetricMetricAttributeKey = "string_attr"
+	VersionedMetricMetricAttributeKeyBooleanAttr        VersionedMetricMetricAttributeKey = "boolean_attr"
+)
+
+// VersionedMetricMetricConfig provides config for the versioned.metric metric.
+type VersionedMetricMetricConfig struct {
+	Enabled          bool `mapstructure:"enabled"`
+	enabledSetByUser bool
+
+	AggregationStrategy string                              `mapstructure:"aggregation_strategy"`
+	EnabledAttributes   []VersionedMetricMetricAttributeKey `mapstructure:"attributes"`
+}
+
+func (ms *VersionedMetricMetricConfig) Unmarshal(parser *confmap.Conf) error {
+	if parser == nil {
+		return nil
+	}
+
+	err := parser.Unmarshal(ms)
+	if err != nil {
+		return err
+	}
+
+	ms.enabledSetByUser = parser.IsSet("enabled")
+	return nil
+}
+
+func (ms *VersionedMetricMetricConfig) Validate() error {
+	for _, val := range ms.EnabledAttributes {
+		switch val {
+		case VersionedMetricMetricAttributeKeyRequiredStringAttr, VersionedMetricMetricAttributeKeyStringAttr, VersionedMetricMetricAttributeKeyBooleanAttr:
+		default:
+			return fmt.Errorf("metric versioned.metric doesn't have an attribute %v, valid attributes: [required_string_attr, string_attr, boolean_attr]", val)
+		}
+	}
+	if !slices.Contains(ms.EnabledAttributes, VersionedMetricMetricAttributeKeyRequiredStringAttr) {
+		return fmt.Errorf("required_string_attr is a required attribute for versioned.metric metric and must be included")
+	}
+
+	switch ms.AggregationStrategy {
+	case AggregationStrategySum, AggregationStrategyAvg, AggregationStrategyMin, AggregationStrategyMax:
+	default:
+		return fmt.Errorf("invalid aggregation strategy %q, valid strategies: [%s, %s, %s, %s]", ms.AggregationStrategy, AggregationStrategySum, AggregationStrategyAvg, AggregationStrategyMin, AggregationStrategyMax)
+	}
+
+	return nil
+}
+
+// VersionedMetricV1MetricAttributeKey specifies the key of an attribute for the versioned.metric@v1 metric.
+type VersionedMetricV1MetricAttributeKey string
+
+const (
+	VersionedMetricV1MetricAttributeKeyRequiredStringAttr VersionedMetricV1MetricAttributeKey = "required_string_attr"
+	VersionedMetricV1MetricAttributeKeyStringAttr         VersionedMetricV1MetricAttributeKey = "string_attr"
+	VersionedMetricV1MetricAttributeKeyBooleanAttr        VersionedMetricV1MetricAttributeKey = "boolean_attr"
+)
+
+// VersionedMetricV1MetricConfig provides config for the versioned.metric@v1 metric.
+type VersionedMetricV1MetricConfig struct {
+	Enabled          bool `mapstructure:"enabled"`
+	enabledSetByUser bool
+
+	AggregationStrategy string                                `mapstructure:"aggregation_strategy"`
+	EnabledAttributes   []VersionedMetricV1MetricAttributeKey `mapstructure:"attributes"`
+}
+
+func (ms *VersionedMetricV1MetricConfig) Unmarshal(parser *confmap.Conf) error {
+	if parser == nil {
+		return nil
+	}
+
+	err := parser.Unmarshal(ms)
+	if err != nil {
+		return err
+	}
+
+	ms.enabledSetByUser = parser.IsSet("enabled")
+	return nil
+}
+
+func (ms *VersionedMetricV1MetricConfig) Validate() error {
+	for _, val := range ms.EnabledAttributes {
+		switch val {
+		case VersionedMetricV1MetricAttributeKeyRequiredStringAttr, VersionedMetricV1MetricAttributeKeyStringAttr, VersionedMetricV1MetricAttributeKeyBooleanAttr:
+		default:
+			return fmt.Errorf("metric versioned.metric@v1 doesn't have an attribute %v, valid attributes: [required_string_attr, string_attr, boolean_attr]", val)
+		}
+	}
+	if !slices.Contains(ms.EnabledAttributes, VersionedMetricV1MetricAttributeKeyRequiredStringAttr) {
+		return fmt.Errorf("required_string_attr is a required attribute for versioned.metric@v1 metric and must be included")
+	}
+
+	switch ms.AggregationStrategy {
+	case AggregationStrategySum, AggregationStrategyAvg, AggregationStrategyMin, AggregationStrategyMax:
+	default:
+		return fmt.Errorf("invalid aggregation strategy %q, valid strategies: [%s, %s, %s, %s]", ms.AggregationStrategy, AggregationStrategySum, AggregationStrategyAvg, AggregationStrategyMin, AggregationStrategyMax)
+	}
+
+	return nil
+}
+
 // MetricsConfig provides config for sample metrics.
 type MetricsConfig struct {
 	DefaultMetric                 DefaultMetricMetricConfig                 `mapstructure:"default.metric"`
@@ -447,6 +553,8 @@ type MetricsConfig struct {
 	ReaggregateMetricWithRequired ReaggregateMetricWithRequiredMetricConfig `mapstructure:"reaggregate.metric.with_required"`
 	SystemCPUTime                 SystemCPUTimeMetricConfig                 `mapstructure:"system.cpu.time"`
 	SystemMemoryUsage             SystemMemoryUsageMetricConfig             `mapstructure:"system.memory.usage"`
+	VersionedMetric               VersionedMetricMetricConfig               `mapstructure:"versioned.metric"`
+	VersionedMetricV1             VersionedMetricV1MetricConfig             `mapstructure:"versioned.metric@v1"`
 }
 
 func DefaultMetricsConfig() MetricsConfig {
@@ -493,6 +601,16 @@ func DefaultMetricsConfig() MetricsConfig {
 			Enabled:             true,
 			AggregationStrategy: AggregationStrategySum,
 			EnabledAttributes:   []SystemMemoryUsageMetricAttributeKey{SystemMemoryUsageMetricAttributeKeyState},
+		},
+		VersionedMetric: VersionedMetricMetricConfig{
+			Enabled:             true,
+			AggregationStrategy: AggregationStrategyAvg,
+			EnabledAttributes:   []VersionedMetricMetricAttributeKey{VersionedMetricMetricAttributeKeyRequiredStringAttr, VersionedMetricMetricAttributeKeyStringAttr, VersionedMetricMetricAttributeKeyBooleanAttr},
+		},
+		VersionedMetricV1: VersionedMetricV1MetricConfig{
+			Enabled:             true,
+			AggregationStrategy: AggregationStrategySum,
+			EnabledAttributes:   []VersionedMetricV1MetricAttributeKey{VersionedMetricV1MetricAttributeKeyRequiredStringAttr, VersionedMetricV1MetricAttributeKeyStringAttr, VersionedMetricV1MetricAttributeKeyBooleanAttr},
 		},
 	}
 }

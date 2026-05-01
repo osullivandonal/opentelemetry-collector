@@ -8,13 +8,12 @@ import (
 	"strconv"
 	"time"
 
-	conventions "go.opentelemetry.io/otel/semconv/v1.40.0"
-
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/filter"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/pmetric"
 	"go.opentelemetry.io/collector/receiver"
+	conventions "go.opentelemetry.io/otel/semconv/v1.40.0"
 )
 
 const (
@@ -128,6 +127,12 @@ var MetricsInfo = metricsInfo{
 	SystemMemoryUsage: metricInfo{
 		Name: "system.memory.usage",
 	},
+	VersionedMetric: metricInfo{
+		Name: "versioned.metric",
+	},
+	VersionedMetricV1: metricInfo{
+		Name: "versioned.metric",
+	},
 }
 
 type metricsInfo struct {
@@ -140,6 +145,8 @@ type metricsInfo struct {
 	ReaggregateMetricWithRequired metricInfo
 	SystemCPUTime                 metricInfo
 	SystemMemoryUsage             metricInfo
+	VersionedMetric               metricInfo
+	VersionedMetricV1             metricInfo
 }
 
 type metricInfo struct {
@@ -991,6 +998,198 @@ func newMetricSystemMemoryUsage(cfg SystemMemoryUsageMetricConfig) metricSystemM
 	return m
 }
 
+type metricVersionedMetric struct {
+	data          pmetric.Metric              // data buffer for generated metric.
+	config        VersionedMetricMetricConfig // metric config provided by user.
+	capacity      int                         // max observed number of data points added to the metric.
+	aggDataPoints []float64                   // slice containing number of aggregated datapoints at each index
+}
+
+// init fills versioned.metric metric with initial data.
+func (m *metricVersionedMetric) init() {
+	m.data.SetName("versioned.metric")
+	m.data.SetDescription("Versioned metric showcasing the usage of the '@' symbol")
+	m.data.SetUnit("1")
+	m.data.SetEmptyGauge()
+	m.data.Gauge().DataPoints().EnsureCapacity(m.capacity)
+	m.aggDataPoints = m.aggDataPoints[:0]
+}
+
+func (m *metricVersionedMetric) recordDataPoint(start pcommon.Timestamp, ts pcommon.Timestamp, val float64, requiredStringAttrAttributeValue string, stringAttrAttributeValue string, booleanAttrAttributeValue bool) {
+	if !m.config.Enabled {
+		return
+	}
+
+	dp := pmetric.NewNumberDataPoint()
+	dp.SetStartTimestamp(start)
+	dp.SetTimestamp(ts)
+	if slices.Contains(m.config.EnabledAttributes, VersionedMetricMetricAttributeKeyRequiredStringAttr) {
+		dp.Attributes().PutStr("required_string_attr", requiredStringAttrAttributeValue)
+	}
+	if slices.Contains(m.config.EnabledAttributes, VersionedMetricMetricAttributeKeyStringAttr) {
+		dp.Attributes().PutStr("string_attr", stringAttrAttributeValue)
+	}
+	if slices.Contains(m.config.EnabledAttributes, VersionedMetricMetricAttributeKeyBooleanAttr) {
+		dp.Attributes().PutBool("boolean_attr", booleanAttrAttributeValue)
+	}
+
+	var s string
+	dps := m.data.Gauge().DataPoints()
+	for i := 0; i < dps.Len(); i++ {
+		dpi := dps.At(i)
+		if dp.Attributes().Equal(dpi.Attributes()) && dp.StartTimestamp() == dpi.StartTimestamp() && dp.Timestamp() == dpi.Timestamp() {
+			switch s = m.config.AggregationStrategy; s {
+			case AggregationStrategySum, AggregationStrategyAvg:
+				dpi.SetDoubleValue(dpi.DoubleValue() + val)
+				m.aggDataPoints[i] += 1
+				return
+			case AggregationStrategyMin:
+				if dpi.DoubleValue() > val {
+					dpi.SetDoubleValue(val)
+				}
+				return
+			case AggregationStrategyMax:
+				if dpi.DoubleValue() < val {
+					dpi.SetDoubleValue(val)
+				}
+				return
+			}
+		}
+	}
+
+	dp.SetDoubleValue(val)
+	m.aggDataPoints = append(m.aggDataPoints, 1)
+	dp.MoveTo(dps.AppendEmpty())
+}
+
+// updateCapacity saves max length of data point slices that will be used for the slice capacity.
+func (m *metricVersionedMetric) updateCapacity() {
+	if m.data.Gauge().DataPoints().Len() > m.capacity {
+		m.capacity = m.data.Gauge().DataPoints().Len()
+	}
+}
+
+// emit appends recorded metric data to a metrics slice and prepares it for recording another set of data points.
+func (m *metricVersionedMetric) emit(metrics pmetric.MetricSlice) {
+	if m.config.Enabled && m.data.Gauge().DataPoints().Len() > 0 {
+		if m.config.AggregationStrategy == AggregationStrategyAvg {
+			for i, aggCount := range m.aggDataPoints {
+				m.data.Gauge().DataPoints().At(i).SetDoubleValue(m.data.Gauge().DataPoints().At(i).DoubleValue() / aggCount)
+			}
+		}
+		m.updateCapacity()
+		m.data.MoveTo(metrics.AppendEmpty())
+		m.init()
+	}
+}
+
+func newMetricVersionedMetric(cfg VersionedMetricMetricConfig) metricVersionedMetric {
+	m := metricVersionedMetric{config: cfg}
+
+	if cfg.Enabled {
+		m.data = pmetric.NewMetric()
+		m.init()
+	}
+	return m
+}
+
+type metricVersionedMetricV1 struct {
+	data          pmetric.Metric                // data buffer for generated metric.
+	config        VersionedMetricV1MetricConfig // metric config provided by user.
+	capacity      int                           // max observed number of data points added to the metric.
+	aggDataPoints []int64                       // slice containing number of aggregated datapoints at each index
+}
+
+// init fills versioned.metric@v1 metric with initial data.
+func (m *metricVersionedMetricV1) init() {
+	m.data.SetName("versioned.metric")
+	m.data.SetDescription("Versioned metric showcasing the usage of the '@' symbol")
+	m.data.SetUnit("1")
+	m.data.SetEmptySum()
+	m.data.Sum().SetIsMonotonic(false)
+	m.data.Sum().SetAggregationTemporality(pmetric.AggregationTemporalityCumulative)
+	m.data.Sum().DataPoints().EnsureCapacity(m.capacity)
+	m.aggDataPoints = m.aggDataPoints[:0]
+}
+
+func (m *metricVersionedMetricV1) recordDataPoint(start pcommon.Timestamp, ts pcommon.Timestamp, val int64, requiredStringAttrAttributeValue string, stringAttrAttributeValue string, booleanAttrAttributeValue bool) {
+	if !m.config.Enabled {
+		return
+	}
+
+	dp := pmetric.NewNumberDataPoint()
+	dp.SetStartTimestamp(start)
+	dp.SetTimestamp(ts)
+	if slices.Contains(m.config.EnabledAttributes, VersionedMetricV1MetricAttributeKeyRequiredStringAttr) {
+		dp.Attributes().PutStr("required_string_attr", requiredStringAttrAttributeValue)
+	}
+	if slices.Contains(m.config.EnabledAttributes, VersionedMetricV1MetricAttributeKeyStringAttr) {
+		dp.Attributes().PutStr("string_attr", stringAttrAttributeValue)
+	}
+	if slices.Contains(m.config.EnabledAttributes, VersionedMetricV1MetricAttributeKeyBooleanAttr) {
+		dp.Attributes().PutBool("boolean_attr", booleanAttrAttributeValue)
+	}
+
+	var s string
+	dps := m.data.Sum().DataPoints()
+	for i := 0; i < dps.Len(); i++ {
+		dpi := dps.At(i)
+		if dp.Attributes().Equal(dpi.Attributes()) && dp.StartTimestamp() == dpi.StartTimestamp() && dp.Timestamp() == dpi.Timestamp() {
+			switch s = m.config.AggregationStrategy; s {
+			case AggregationStrategySum, AggregationStrategyAvg:
+				dpi.SetIntValue(dpi.IntValue() + val)
+				m.aggDataPoints[i] += 1
+				return
+			case AggregationStrategyMin:
+				if dpi.IntValue() > val {
+					dpi.SetIntValue(val)
+				}
+				return
+			case AggregationStrategyMax:
+				if dpi.IntValue() < val {
+					dpi.SetIntValue(val)
+				}
+				return
+			}
+		}
+	}
+
+	dp.SetIntValue(val)
+	m.aggDataPoints = append(m.aggDataPoints, 1)
+	dp.MoveTo(dps.AppendEmpty())
+}
+
+// updateCapacity saves max length of data point slices that will be used for the slice capacity.
+func (m *metricVersionedMetricV1) updateCapacity() {
+	if m.data.Sum().DataPoints().Len() > m.capacity {
+		m.capacity = m.data.Sum().DataPoints().Len()
+	}
+}
+
+// emit appends recorded metric data to a metrics slice and prepares it for recording another set of data points.
+func (m *metricVersionedMetricV1) emit(metrics pmetric.MetricSlice) {
+	if m.config.Enabled && m.data.Sum().DataPoints().Len() > 0 {
+		if m.config.AggregationStrategy == AggregationStrategyAvg {
+			for i, aggCount := range m.aggDataPoints {
+				m.data.Sum().DataPoints().At(i).SetIntValue(m.data.Sum().DataPoints().At(i).IntValue() / aggCount)
+			}
+		}
+		m.updateCapacity()
+		m.data.MoveTo(metrics.AppendEmpty())
+		m.init()
+	}
+}
+
+func newMetricVersionedMetricV1(cfg VersionedMetricV1MetricConfig) metricVersionedMetricV1 {
+	m := metricVersionedMetricV1{config: cfg}
+
+	if cfg.Enabled {
+		m.data = pmetric.NewMetric()
+		m.init()
+	}
+	return m
+}
+
 // MetricsBuilder provides an interface for scrapers to report metrics while taking care of all the transformations
 // required to produce metric representation defined in metadata and user config.
 type MetricsBuilder struct {
@@ -1010,6 +1209,8 @@ type MetricsBuilder struct {
 	metricReaggregateMetricWithRequired metricReaggregateMetricWithRequired
 	metricSystemCPUTime                 metricSystemCPUTime
 	metricSystemMemoryUsage             metricSystemMemoryUsage
+	metricVersionedMetric               metricVersionedMetric
+	metricVersionedMetricV1             metricVersionedMetricV1
 }
 
 // MetricBuilderOption applies changes to default metrics builder.
@@ -1068,6 +1269,8 @@ func NewMetricsBuilder(mbc MetricsBuilderConfig, settings receiver.Settings, opt
 		metricReaggregateMetricWithRequired: newMetricReaggregateMetricWithRequired(mbc.Metrics.ReaggregateMetricWithRequired),
 		metricSystemCPUTime:                 newMetricSystemCPUTime(mbc.Metrics.SystemCPUTime),
 		metricSystemMemoryUsage:             newMetricSystemMemoryUsage(mbc.Metrics.SystemMemoryUsage),
+		metricVersionedMetric:               newMetricVersionedMetric(mbc.Metrics.VersionedMetric),
+		metricVersionedMetricV1:             newMetricVersionedMetricV1(mbc.Metrics.VersionedMetricV1),
 		resourceAttributeIncludeFilter:      make(map[string]filter.Filter),
 		resourceAttributeExcludeFilter:      make(map[string]filter.Filter),
 	}
@@ -1204,6 +1407,8 @@ func (mb *MetricsBuilder) EmitForResource(options ...ResourceMetricsOption) {
 	mb.metricReaggregateMetricWithRequired.emit(ils.Metrics())
 	mb.metricSystemCPUTime.emit(ils.Metrics())
 	mb.metricSystemMemoryUsage.emit(ils.Metrics())
+	mb.metricVersionedMetric.emit(ils.Metrics())
+	mb.metricVersionedMetricV1.emit(ils.Metrics())
 
 	for _, op := range options {
 		op.apply(rm)
@@ -1283,6 +1488,16 @@ func (mb *MetricsBuilder) RecordSystemCPUTimeDataPoint(ts pcommon.Timestamp, val
 // RecordSystemMemoryUsageDataPoint adds a data point to system.memory.usage metric.
 func (mb *MetricsBuilder) RecordSystemMemoryUsageDataPoint(ts pcommon.Timestamp, val int64, stateAttributeValue AttributeState) {
 	mb.metricSystemMemoryUsage.recordDataPoint(mb.startTime, ts, val, stateAttributeValue.String())
+}
+
+// RecordVersionedMetricDataPoint adds a data point to versioned.metric metric.
+func (mb *MetricsBuilder) RecordVersionedMetricDataPoint(ts pcommon.Timestamp, val float64, requiredStringAttrAttributeValue string, stringAttrAttributeValue string, booleanAttrAttributeValue bool) {
+	mb.metricVersionedMetric.recordDataPoint(mb.startTime, ts, val, requiredStringAttrAttributeValue, stringAttrAttributeValue, booleanAttrAttributeValue)
+}
+
+// RecordVersionedMetricV1DataPoint adds a data point to versioned.metric@v1 metric.
+func (mb *MetricsBuilder) RecordVersionedMetricV1DataPoint(ts pcommon.Timestamp, val int64, requiredStringAttrAttributeValue string, stringAttrAttributeValue string, booleanAttrAttributeValue bool) {
+	mb.metricVersionedMetricV1.recordDataPoint(mb.startTime, ts, val, requiredStringAttrAttributeValue, stringAttrAttributeValue, booleanAttrAttributeValue)
 }
 
 // Reset resets metrics builder to its initial state. It should be used when external metrics source is restarted,

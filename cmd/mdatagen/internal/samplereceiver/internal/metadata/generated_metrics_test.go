@@ -6,12 +6,11 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zaptest/observer"
-
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/pmetric"
 	"go.opentelemetry.io/collector/receiver/receivertest"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zaptest/observer"
 )
 
 type testDataSet int
@@ -76,6 +75,8 @@ func TestMetricsBuilder(t *testing.T) {
 			aggMap["ReaggregateMetricWithRequired"] = mb.metricReaggregateMetricWithRequired.config.AggregationStrategy
 			aggMap["SystemCPUTime"] = mb.metricSystemCPUTime.config.AggregationStrategy
 			aggMap["SystemMemoryUsage"] = mb.metricSystemMemoryUsage.config.AggregationStrategy
+			aggMap["VersionedMetric"] = mb.metricVersionedMetric.config.AggregationStrategy
+			aggMap["VersionedMetricV1"] = mb.metricVersionedMetricV1.config.AggregationStrategy
 
 			expectedWarnings := 0
 			if tt.metricsSet == testDataSetDefault {
@@ -167,6 +168,12 @@ func TestMetricsBuilder(t *testing.T) {
 			if tt.name == "reaggregate_set" {
 				mb.RecordSystemMemoryUsageDataPoint(ts, 3, AttributeStateCached)
 			}
+			defaultMetricsCount++
+			allMetricsCount++
+			mb.RecordVersionedMetricDataPoint(ts, 1, "required_string_attr-val", "string_attr-val", true)
+			if tt.name == "reaggregate_set" {
+				mb.RecordVersionedMetricDataPoint(ts, 3, "required_string_attr-val", "string_attr-val-2", false)
+			}
 
 			rb := mb.NewResourceBuilder()
 			rb.SetMapResourceAttr(map[string]any{"key1": "map.resource.attr-val1", "key2": "map.resource.attr-val2"})
@@ -189,6 +196,8 @@ func TestMetricsBuilder(t *testing.T) {
 				assert.Empty(t, mb.metricReaggregateMetricWithRequired.aggDataPoints)
 				assert.Empty(t, mb.metricSystemCPUTime.aggDataPoints)
 				assert.Empty(t, mb.metricSystemMemoryUsage.aggDataPoints)
+				assert.Empty(t, mb.metricVersionedMetric.aggDataPoints)
+				assert.Empty(t, mb.metricVersionedMetricV1.aggDataPoints)
 			}
 
 			if tt.expectEmpty {
@@ -645,6 +654,56 @@ func TestMetricsBuilder(t *testing.T) {
 							assert.Equal(t, int64(3), dp.IntValue())
 						}
 						_, ok := dp.Attributes().Get("state")
+						assert.False(t, ok)
+					}
+				case "versioned.metric":
+					if tt.name != "reaggregate_set" {
+						assert.False(t, validatedMetrics["versioned.metric"], "Found a duplicate in the metrics slice: versioned.metric")
+						validatedMetrics["versioned.metric"] = true
+						assert.Equal(t, pmetric.MetricTypeGauge, mi.Type())
+						assert.Equal(t, 1, mi.Gauge().DataPoints().Len())
+						assert.Equal(t, "Versioned metric showcasing the usage of the '@' symbol", mi.Description())
+						assert.Equal(t, "1", mi.Unit())
+						dp := mi.Gauge().DataPoints().At(0)
+						assert.Equal(t, start, dp.StartTimestamp())
+						assert.Equal(t, ts, dp.Timestamp())
+						assert.Equal(t, pmetric.NumberDataPointValueTypeDouble, dp.ValueType())
+						assert.InDelta(t, float64(1), dp.DoubleValue(), 0.01)
+						requiredStringAttrAttrVal, ok := dp.Attributes().Get("required_string_attr")
+						assert.True(t, ok)
+						assert.Equal(t, "required_string_attr-val", requiredStringAttrAttrVal.Str())
+						stringAttrAttrVal, ok := dp.Attributes().Get("string_attr")
+						assert.True(t, ok)
+						assert.Equal(t, "string_attr-val", stringAttrAttrVal.Str())
+						booleanAttrAttrVal, ok := dp.Attributes().Get("boolean_attr")
+						assert.True(t, ok)
+						assert.True(t, booleanAttrAttrVal.Bool())
+					} else {
+						assert.False(t, validatedMetrics["versioned.metric"], "Found a duplicate in the metrics slice: versioned.metric")
+						validatedMetrics["versioned.metric"] = true
+						assert.Equal(t, pmetric.MetricTypeGauge, mi.Type())
+						assert.Equal(t, 1, mi.Gauge().DataPoints().Len())
+						assert.Equal(t, "Versioned metric showcasing the usage of the '@' symbol", mi.Description())
+						assert.Equal(t, "1", mi.Unit())
+						dp := mi.Gauge().DataPoints().At(0)
+						assert.Equal(t, start, dp.StartTimestamp())
+						assert.Equal(t, ts, dp.Timestamp())
+						assert.Equal(t, pmetric.NumberDataPointValueTypeDouble, dp.ValueType())
+						switch aggMap["versioned.metric"] {
+						case "sum":
+							assert.InDelta(t, float64(4), dp.DoubleValue(), 0.01)
+						case "avg":
+							assert.InDelta(t, float64(2), dp.DoubleValue(), 0.01)
+						case "min":
+							assert.InDelta(t, float64(1), dp.DoubleValue(), 0.01)
+						case "max":
+							assert.InDelta(t, float64(3), dp.DoubleValue(), 0.01)
+						}
+						_, ok := dp.Attributes().Get("required_string_attr")
+						assert.True(t, ok)
+						_, ok = dp.Attributes().Get("string_attr")
+						assert.False(t, ok)
+						_, ok = dp.Attributes().Get("boolean_attr")
 						assert.False(t, ok)
 					}
 				}

@@ -27,6 +27,12 @@ all_set:
     system.memory.usage:
       enabled: true
       attributes: ["state"]
+    versioned.metric:
+      enabled: true
+      attributes: ["required_string_attr","string_attr","boolean_attr"]
+    versioned.metric@v1:
+      enabled: true
+      attributes: ["required_string_attr","string_attr","boolean_attr"]
   events:
     default.event:
       enabled: true
@@ -81,6 +87,12 @@ reaggregate_set:
     system.memory.usage:
       enabled: true
       attributes: []
+    versioned.metric:
+      enabled: true
+      attributes: ["required_string_attr"]
+    versioned.metric@v1:
+      enabled: true
+      attributes: ["required_string_attr"]
   events:
     default.event:
       enabled: true
@@ -135,6 +147,12 @@ none_set:
     system.memory.usage:
       enabled: false
       attributes: ["state"]
+    versioned.metric:
+      enabled: false
+      attributes: ["required_string_attr","string_attr","boolean_attr"]
+    versioned.metric@v1:
+      enabled: false
+      attributes: ["required_string_attr","string_attr","boolean_attr"]
   events:
     default.event:
       enabled: false

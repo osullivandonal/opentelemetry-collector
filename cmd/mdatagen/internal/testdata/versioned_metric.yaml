@@ -25,7 +25,7 @@ metrics:
     warnings:
       if_enabled: This metric is deprecated, use system.cpu.time/v2 instead.
   # New semconv metric - different config key, same emitted name
-  system.cpu.time/v2:
+  system.cpu.time@v2:
     name: system.cpu.time
     enabled: false
     description: CPU time metric per new semantic conventions
