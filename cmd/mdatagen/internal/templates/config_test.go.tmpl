@@ -107,6 +107,18 @@ func loadMetricsBuilderConfig(t *testing.T, name string) MetricsBuilderConfig {
 	require.NoError(t, sub.Unmarshal(&cfg, confmap.WithIgnoreUnused()))
 	return cfg
 }
+
+{{- $groups := getVersionedMetricGroups }}
+{{- if $groups }}
+func TestValidate(t *testing.T) {
+  cfg := loadMetricsBuilderConfig(t, "default")
+  err := cfg.Metrics.Validate()
+  require.Error(t, err)
+  {{- range $emitted, $names := $groups }}
+  require.ErrorContains(t, err, "cannot enable both {{ index $names 0 }} and {{ index $names 1 }}")
+  {{- end }}
+}
+{{- end }}
 {{- end }}
 
 {{ if .Events }}

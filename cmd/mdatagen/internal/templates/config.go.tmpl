@@ -9,7 +9,11 @@ package {{ .Package }}
 {{- $hasEnumResourceAttr := false }}
 {{- range $_, $attr := .ResourceAttributes }}{{- if $attr.Enum }}{{- $hasEnumResourceAttr = true }}{{- end }}{{- end }}
 
+{{- $groups := getVersionedMetricGroups }}
 import (
+  {{- if $groups }}
+  "errors"
+  {{- end }}
 	{{- if or $hasReagMetrics (and .OverrideValueEnabled $hasEnumResourceAttr) }}
 	"fmt"
 	{{- end }}
@@ -38,6 +42,20 @@ func (ms *MetricConfig) Unmarshal(parser *confmap.Conf) error {
 	{{- template "metricUnmarshal" "ms" }}
 }
 {{- else }}
+
+{{- if $groups }}
+// Validate that we are not double writting two metrics of the same name
+func (mc MetricsConfig) Validate() error {
+  // The following metrics have been versioned, we don't allow double writing of versioned metrics,
+  // see RFC: https://github.com/open-telemetry/opentelemetry-collector/blob/main/docs/rfcs/semconv-feature-gates.md#handling-conflicts-during-double-publishing
+  {{- range $emitted, $names := getVersionedMetricGroups }}
+  if mc.{{ (index $names 0).Render }}.Enabled && mc.{{ (index $names 1).Render }}.Enabled {
+    return errors.New("cannot enable both {{ index $names 0 }} and {{ index $names 1 }}")
+  }
+  {{- end }}
+  return nil
+}
+{{- end }}
 
 {{- range $name, $metric := .Metrics }}
 {{- if hasAggregatableAttributes $metric.Attributes }}

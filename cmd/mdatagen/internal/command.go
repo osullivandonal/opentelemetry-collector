@@ -311,6 +311,24 @@ func getTemplateFuncMap(md Metadata, importRootPath string) template.FuncMap {
 
 			return used
 		},
+		"getVersionedMetricGroups": func() map[string][]MetricName {
+			groups := make(map[string][]MetricName)
+			for name := range md.Metrics {
+				emitted := name.EmittedName()
+				groups[emitted] = append(groups[emitted], name)
+			}
+			// filter to only include duplicates/Versioned Metric
+			result := make(map[string][]MetricName)
+			for emitted, names := range groups {
+				if len(names) > 1 {
+					result[emitted] = names
+				}
+				sort.Slice(names, func(i, j int) bool {
+					return string(names[j]) < string(names[i])
+				})
+			}
+			return result
+		},
 		"metricInfo": func(mn MetricName) Metric {
 			return md.Metrics[mn]
 		},

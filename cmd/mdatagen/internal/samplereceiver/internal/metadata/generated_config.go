@@ -3,6 +3,7 @@
 package metadata
 
 import (
+	"errors"
 	"fmt"
 	"slices"
 
@@ -10,6 +11,16 @@ import (
 	"go.opentelemetry.io/collector/filter"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 )
+
+// Validate that we are not double writting two metrics of the same name
+func (mc MetricsConfig) Validate() error {
+	// The following metrics have been versioned, we don't allow double writing of versioned metrics,
+	// see RFC: https://github.com/open-telemetry/opentelemetry-collector/blob/main/docs/rfcs/semconv-feature-gates.md#handling-conflicts-during-double-publishing
+	if mc.VersionedMetricV1.Enabled && mc.VersionedMetric.Enabled {
+		return errors.New("cannot enable both versioned.metric@v1 and versioned.metric")
+	}
+	return nil
+}
 
 // DefaultMetricMetricAttributeKey specifies the key of an attribute for the default.metric metric.
 type DefaultMetricMetricAttributeKey string

@@ -29,6 +29,10 @@ func (mn MetricName) EmittedName() string {
 	return string(mn)
 }
 
+func (m *Metric) VersionedMetric() bool {
+	return m.Versioned
+}
+
 func (mn MetricName) Render() (string, error) {
 	return helpers.FormatIdentifier(string(mn), true)
 }

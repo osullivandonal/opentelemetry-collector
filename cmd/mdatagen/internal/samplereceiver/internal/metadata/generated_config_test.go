@@ -184,6 +184,12 @@ func loadMetricsBuilderConfig(t *testing.T, name string) MetricsBuilderConfig {
 	require.NoError(t, sub.Unmarshal(&cfg, confmap.WithIgnoreUnused()))
 	return cfg
 }
+func TestValidate(t *testing.T) {
+	cfg := loadMetricsBuilderConfig(t, "default")
+	err := cfg.Metrics.Validate()
+	require.Error(t, err)
+	require.ErrorContains(t, err, "cannot enable both versioned.metric@v1 and versioned.metric")
+}
 
 func loadLogsBuilderConfig(t *testing.T, name string) LogsBuilderConfig {
 	cm, err := confmaptest.LoadConf(filepath.Join("testdata", "config.yaml"))
