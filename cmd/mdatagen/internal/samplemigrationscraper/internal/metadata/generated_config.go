@@ -3,8 +3,6 @@
 package metadata
 
 import (
-	"errors"
-
 	"go.opentelemetry.io/collector/confmap"
 )
 

@@ -11,9 +11,6 @@ package {{ .Package }}
 
 {{- $groups := getVersionedMetricGroups }}
 import (
-  {{- if $groups }}
-  "errors"
-  {{- end }}
 	{{- if or $hasReagMetrics (and .OverrideValueEnabled $hasEnumResourceAttr) }}
 	"fmt"
 	{{- end }}

@@ -19,11 +19,8 @@ type Config struct {
 }
 
 func createDefaultConfig() component.Config {
-	controllerConfig := scraperhelper.NewDefaultControllerConfig()
-	controllerConfig.Timeout = 30 * time.Second
 	return &Config{
 		MetricsBuilderConfig: metadata.NewDefaultMetricsBuilderConfig(),
-		ControllerConfig:     controllerConfig,
 		EmitLegacyMetrics:    false,
 	}
 }

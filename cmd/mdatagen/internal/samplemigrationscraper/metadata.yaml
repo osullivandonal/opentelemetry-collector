@@ -16,8 +16,6 @@ config:
   allOf:
     - $ref: ./internal/metadata.metrics_builder_config
     - $ref: /scraper/scraperhelper.controller_config
-      default:
-        timeout: 30s
   properties:
     emit_legacy_metrics:
       description: Whether to emit legacy metric names alongside new ones.

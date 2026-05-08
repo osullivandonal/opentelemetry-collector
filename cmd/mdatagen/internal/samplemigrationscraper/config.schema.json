@@ -70,9 +70,6 @@
     {
       "description": "ControllerConfig defines common settings for a scraper controller configuration. Scraper controller receivers can embed this struct, instead of receiver.Settings, and extend it with more fields if needed.",
       "type": "object",
-      "default": {
-        "timeout": "30s"
-      },
       "properties": {
         "collection_interval": {
           "description": "CollectionInterval sets how frequently the scraper should be called and used as the context timeout to ensure that scrapers don't exceed the interval.",

@@ -85,9 +85,3 @@ func loadMetricsBuilderConfig(t *testing.T, name string) MetricsBuilderConfig {
 	require.NoError(t, sub.Unmarshal(&cfg, confmap.WithIgnoreUnused()))
 	return cfg
 }
-func TestValidate(t *testing.T) {
-	cfg := loadMetricsBuilderConfig(t, "default")
-	err := cfg.Metrics.Validate()
-	require.Error(t, err)
-	require.ErrorContains(t, err, "cannot enable both system.cpu.utilization@v1 and system.cpu.utilization")
-}
