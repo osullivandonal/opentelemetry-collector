@@ -66,6 +66,9 @@ type Metric struct {
 
 	// Deprecation metadata for deprecated metrics
 	Deprecated *Deprecated `mapstructure:"deprecated,omitempty"`
+
+	// Migration describes dual-emission behavior controlled by feature gates.
+	Migration *MetricMigration `mapstructure:"migration"`
 }
 
 func (m *Metric) validate(metricName MetricName, semConvVersion string) error {
@@ -417,4 +420,19 @@ func (d *Histogram) Unmarshal(parser *confmap.Conf) error {
 
 func (d *Histogram) IsAsync() bool {
 	return d.Async
+}
+
+// MetricMigration defines dual-emission mapping and feature gates.
+type MetricMigration struct {
+	// To is the target metric key in the same metadata file.
+	To MetricName `mapstructure:"to"`
+	// ThroughGates lists the gates controlling emission of old/new.
+	ThroughGates MigrationGates `mapstructure:"through_gates"`
+}
+
+type MigrationGates struct {
+	// DisableOld gate, when enabled, disables old emission.
+	DisableOld FeatureGateID `mapstructure:"disable_old"`
+	// EnableNew gate, when enabled, enables new emission.
+	EnableNew FeatureGateID `mapstructure:"enable_new"`
 }

@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "go.opentelemetry.io/collector/cmd/mdatagen/internal/samplemigrationscraper",
+  "title": "scraper/sample",
+  "description": "Configuration for the Sample Migration Scraper.",
+  "type": "object",
+  "allOf": [
+    {
+      "description": "MetricsBuilderConfig is a configuration for sample metrics builder.",
+      "type": "object",
+      "properties": {
+        "metrics": {
+          "description": "MetricsConfig provides config for sample metrics.",
+          "type": "object",
+          "properties": {
+            "linux.memory.available": {
+              "description": "LinuxMemoryAvailableMetricConfig provides config for the linux.memory.available metric.",
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "default": false
+                }
+              }
+            },
+            "system.cpu.foo": {
+              "description": "SystemCPUFooMetricConfig provides config for the system.cpu.foo metric.",
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "default": false
+                }
+              }
+            },
+            "system.cpu.utilization": {
+              "description": "SystemCPUUtilizationMetricConfig provides config for the system.cpu.utilization metric.",
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "default": true
+                }
+              }
+            },
+            "system.cpu.utilization@v1": {
+              "description": "SystemCPUUtilizationV1MetricConfig provides config for the system.cpu.utilization@v1 metric.",
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "default": true
+                }
+              }
+            },
+            "system.memory.linux.available": {
+              "description": "SystemMemoryLinuxAvailableMetricConfig provides config for the system.memory.linux.available metric.",
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "default": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "ControllerConfig defines common settings for a scraper controller configuration. Scraper controller receivers can embed this struct, instead of receiver.Settings, and extend it with more fields if needed.",
+      "type": "object",
+      "default": {
+        "timeout": "30s"
+      },
+      "properties": {
+        "collection_interval": {
+          "description": "CollectionInterval sets how frequently the scraper should be called and used as the context timeout to ensure that scrapers don't exceed the interval.",
+          "type": "string",
+          "pattern": "^([0-9]+(\\.[0-9]+)?(ns|us|µs|ms|s|m|h))+$"
+        },
+        "initial_delay": {
+          "description": "InitialDelay sets the initial start delay for the scraper, any non positive value is assumed to be immediately.",
+          "type": "string",
+          "pattern": "^([0-9]+(\\.[0-9]+)?(ns|us|µs|ms|s|m|h))+$"
+        },
+        "timeout": {
+          "description": "Timeout is an optional value used to set scraper's context deadline.",
+          "type": "string",
+          "pattern": "^([0-9]+(\\.[0-9]+)?(ns|us|µs|ms|s|m|h))+$"
+        }
+      }
+    }
+  ],
+  "properties": {
+    "emit_legacy_metrics": {
+      "description": "Whether to emit legacy metric names alongside new ones.",
+      "type": "boolean",
+      "default": false
+    }
+  }
+}

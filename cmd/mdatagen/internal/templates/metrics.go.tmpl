@@ -511,6 +511,33 @@ func (mb *MetricsBuilder) Record{{ $name.Render }}DataPoint(ts pcommon.Timestamp
 		return fmt.Errorf("failed to parse {{ $metric.Data.MetricValueType.BasicType }} for {{ $name.Render }}, value was %s: %w", inputVal, err)
 	}
 	{{- end }}
+  {{- if $metric.Migration }}
+	// Dual-schema emission controlled by feature gates
+	if !{{ printf "%s" $metric.Migration.ThroughGates.DisableOld | publicVar }}FeatureGate.IsEnabled() {
+		mb.metric{{ $name.Render }}.recordDataPoint(mb.startTime, ts, val
+		{{- range $metric.Attributes -}}
+		{{- if not (attributeInfo .).IsConditional -}}
+		, {{ .RenderUnexported }}AttributeValue{{ if (attributeInfo .).Enum }}.String(){{ end }}
+		{{- end -}}
+		{{- end -}}
+		{{- if $metric.HasConditionalAttributes $.Attributes -}}
+        , options...
+        {{- end -}}
+        )
+	}
+	if {{ printf "%s" $metric.Migration.ThroughGates.EnableNew | publicVar }}FeatureGate.IsEnabled() {
+		mb.metric{{ $metric.Migration.To.Render }}.recordDataPoint(mb.startTime, ts, val
+		{{- range $metric.Attributes -}}
+		{{- if not (attributeInfo .).IsConditional -}}
+		, {{ .RenderUnexported }}AttributeValue{{ if (attributeInfo .).Enum }}.String(){{ end }}
+		{{- end -}}
+		{{- end -}}
+		{{- if $metric.HasConditionalAttributes $.Attributes -}}
+        , options...
+        {{- end -}}
+        )
+	}
+	{{- else }}
 	mb.metric{{ $name.Render }}.recordDataPoint(mb.startTime, ts, val
 		{{- range $metric.Attributes -}}
 		{{- if not (attributeInfo .).IsConditional -}}
@@ -521,6 +548,7 @@ func (mb *MetricsBuilder) Record{{ $name.Render }}DataPoint(ts pcommon.Timestamp
 		, options...
 		{{- end -}}
 		)
+  {{- end }}
 	{{- if $metric.Data.HasMetricInputType }}
 	return nil
 	{{- end }}
