@@ -40,20 +40,6 @@ func (ms *MetricConfig) Unmarshal(parser *confmap.Conf) error {
 }
 {{- else }}
 
-{{- if $groups }}
-// Validate that we are not double writting two metrics of the same name
-func (mc MetricsConfig) Validate() error {
-  // The following metrics have been versioned, we don't allow double writing of versioned metrics,
-  // see RFC: https://github.com/open-telemetry/opentelemetry-collector/blob/main/docs/rfcs/semconv-feature-gates.md#handling-conflicts-during-double-publishing
-  {{- range $emitted, $names := getVersionedMetricGroups }}
-  if mc.{{ (index $names 0).Render }}.Enabled && mc.{{ (index $names 1).Render }}.Enabled {
-    return errors.New("cannot enable both {{ index $names 0 }} and {{ index $names 1 }}")
-  }
-  {{- end }}
-  return nil
-}
-{{- end }}
-
 {{- range $name, $metric := .Metrics }}
 {{- if hasAggregatableAttributes $metric.Attributes }}
 // {{ $name.Render }}MetricAttributeKey specifies the key of an attribute for the {{ $name }} metric.

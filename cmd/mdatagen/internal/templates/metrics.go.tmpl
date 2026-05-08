@@ -345,7 +345,20 @@ func NewMetricsBuilder(mbc MetricsBuilderConfig, settings {{ .Status.Class }}.Se
 	if mbc.ResourceAttributes.{{ $name.Render }}.MetricsExclude != nil {
 		mb.resourceAttributeExcludeFilter["{{ $name }}"] = filter.CreateFilter(mbc.ResourceAttributes.{{ $name.Render }}.MetricsExclude)
 	}
+
+  {{- end }}
+
+  {{- range $name, $metric := .Metrics }}
+  {{- if $metric.Migration }}
+  if {{ printf "%s" $metric.Migration.ThroughGates.EnableNew | publicVar }}FeatureGate.IsEnabled() {
+    if mb.metric{{ $name.Render }}.data.Type() != mb.metric{{ $metric.Migration.To.Render }}.data.Type() {
+      // Disable legacy metric if legacy and latest have same name but different typs
+      mb.metric{{ $name.Render }}.config.Enabled = false
+    }
+  }
+
 	{{- end }}
+  {{- end }}
 
 	for _, op := range options {
 		op.apply(mb)
@@ -513,6 +526,10 @@ func (mb *MetricsBuilder) Record{{ $name.Render }}DataPoint(ts pcommon.Timestamp
 	{{- end }}
   {{- if $metric.Migration }}
 	// Dual-schema emission controlled by feature gates
+  // TODO need to handle dual emission correctly:
+  // 1) If metric name stays the same but an attribute is renamed, emit single metric with both v0 and v1 attributes
+  // 2) If metric name says the same but the type changes, just emit the v1 metric
+
 	if !{{ printf "%s" $metric.Migration.ThroughGates.DisableOld | publicVar }}FeatureGate.IsEnabled() {
 		mb.metric{{ $name.Render }}.recordDataPoint(mb.startTime, ts, val
 		{{- range $metric.Attributes -}}

@@ -341,6 +341,18 @@ func NewMetricsBuilder(mbc MetricsBuilderConfig, settings scraper.Settings, opti
 		metricSystemCPUUtilizationV1:     newMetricSystemCPUUtilizationV1(mbc.Metrics.SystemCPUUtilizationV1),
 		metricSystemMemoryLinuxAvailable: newMetricSystemMemoryLinuxAvailable(mbc.Metrics.SystemMemoryLinuxAvailable),
 	}
+	if ReceiverHostmetricsEmitV1SystemConventionsFeatureGate.IsEnabled() {
+		if mb.metricLinuxMemoryAvailable.data.Type() != mb.metricSystemMemoryLinuxAvailable.data.Type() {
+			// Disable legacy metric if legacy and latest have same name but different typs
+			mb.metricLinuxMemoryAvailable.config.Enabled = false
+		}
+	}
+	if ReceiverHostmetricsEmitV1SystemConventionsFeatureGate.IsEnabled() {
+		if mb.metricSystemCPUUtilization.data.Type() != mb.metricSystemCPUUtilizationV1.data.Type() {
+			// Disable legacy metric if legacy and latest have same name but different typs
+			mb.metricSystemCPUUtilization.config.Enabled = false
+		}
+	}
 
 	for _, op := range options {
 		op.apply(mb)
@@ -434,6 +446,10 @@ func (mb *MetricsBuilder) Emit(options ...ResourceMetricsOption) pmetric.Metrics
 // RecordLinuxMemoryAvailableDataPoint adds a data point to linux.memory.available metric.
 func (mb *MetricsBuilder) RecordLinuxMemoryAvailableDataPoint(ts pcommon.Timestamp, val int64) {
 	// Dual-schema emission controlled by feature gates
+	// TODO need to handle dual emission correctly:
+	// 1) If metric name stays the same but an attribute is renamed, emit single metric with both v0 and v1 attributes
+	// 2) If metric name says the same but the type changes, just emit the v1 metric
+
 	if !ReceiverHostmetricsDontEmitV0SystemConventionsFeatureGate.IsEnabled() {
 		mb.metricLinuxMemoryAvailable.recordDataPoint(mb.startTime, ts, val)
 	}
@@ -450,6 +466,10 @@ func (mb *MetricsBuilder) RecordSystemCPUFooDataPoint(ts pcommon.Timestamp, val 
 // RecordSystemCPUUtilizationDataPoint adds a data point to system.cpu.utilization metric.
 func (mb *MetricsBuilder) RecordSystemCPUUtilizationDataPoint(ts pcommon.Timestamp, val float64) {
 	// Dual-schema emission controlled by feature gates
+	// TODO need to handle dual emission correctly:
+	// 1) If metric name stays the same but an attribute is renamed, emit single metric with both v0 and v1 attributes
+	// 2) If metric name says the same but the type changes, just emit the v1 metric
+
 	if !ReceiverHostmetricsDontEmitV0SystemConventionsFeatureGate.IsEnabled() {
 		mb.metricSystemCPUUtilization.recordDataPoint(mb.startTime, ts, val)
 	}
