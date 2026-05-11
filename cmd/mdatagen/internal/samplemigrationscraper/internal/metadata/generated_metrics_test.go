@@ -65,7 +65,7 @@ func TestMetricsBuilder(t *testing.T) {
 			mb.RecordSystemCPUFooDataPoint(ts, 1)
 			defaultMetricsCount++
 			allMetricsCount++
-			mb.RecordSystemCPUUtilizationDataPoint(ts, 1)
+			mb.RecordSystemCPUUtilizationDataPoint(ts, 1, "cpu-val", AttributeStateIdle)
 
 			allMetricsCount++
 			mb.RecordSystemMemoryLinuxAvailableDataPoint(ts, 1)
@@ -136,6 +136,12 @@ func TestMetricsBuilder(t *testing.T) {
 					assert.Equal(t, ts, dp.Timestamp())
 					assert.Equal(t, pmetric.NumberDataPointValueTypeDouble, dp.ValueType())
 					assert.InDelta(t, float64(1), dp.DoubleValue(), 0.01)
+					cpuAttrVal, ok := dp.Attributes().Get("cpu")
+					assert.True(t, ok)
+					assert.Equal(t, "cpu-val", cpuAttrVal.Str())
+					stateAttrVal, ok := dp.Attributes().Get("state")
+					assert.True(t, ok)
+					assert.Equal(t, "idle", stateAttrVal.Str())
 				case "system.memory.linux.available":
 					assert.False(t, validatedMetrics["system.memory.linux.available"], "Found a duplicate in the metrics slice: system.memory.linux.available")
 					validatedMetrics["system.memory.linux.available"] = true

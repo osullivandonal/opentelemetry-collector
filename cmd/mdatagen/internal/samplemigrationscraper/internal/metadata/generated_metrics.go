@@ -11,6 +11,56 @@ import (
 	"go.opentelemetry.io/collector/scraper"
 )
 
+// AttributeState specifies the value state attribute.
+type AttributeState int
+
+const (
+	_ AttributeState = iota
+	AttributeStateIdle
+	AttributeStateInterrupt
+	AttributeStateNice
+	AttributeStateSoftirq
+	AttributeStateSteal
+	AttributeStateSystem
+	AttributeStateUser
+	AttributeStateWait
+)
+
+// String returns the string representation of the AttributeState.
+func (av AttributeState) String() string {
+	switch av {
+	case AttributeStateIdle:
+		return "idle"
+	case AttributeStateInterrupt:
+		return "interrupt"
+	case AttributeStateNice:
+		return "nice"
+	case AttributeStateSoftirq:
+		return "softirq"
+	case AttributeStateSteal:
+		return "steal"
+	case AttributeStateSystem:
+		return "system"
+	case AttributeStateUser:
+		return "user"
+	case AttributeStateWait:
+		return "wait"
+	}
+	return ""
+}
+
+// MapAttributeState is a helper map of string to AttributeState attribute value.
+var MapAttributeState = map[string]AttributeState{
+	"idle":      AttributeStateIdle,
+	"interrupt": AttributeStateInterrupt,
+	"nice":      AttributeStateNice,
+	"softirq":   AttributeStateSoftirq,
+	"steal":     AttributeStateSteal,
+	"system":    AttributeStateSystem,
+	"user":      AttributeStateUser,
+	"wait":      AttributeStateWait,
+}
+
 var MetricsInfo = metricsInfo{
 	LinuxMemoryAvailable: metricInfo{
 		Name: "linux.memory.available",
@@ -155,9 +205,10 @@ func (m *metricSystemCPUUtilization) init() {
 	m.data.SetDescription("CPU utilization as a ratio.")
 	m.data.SetUnit("1")
 	m.data.SetEmptyGauge()
+	m.data.Gauge().DataPoints().EnsureCapacity(m.capacity)
 }
 
-func (m *metricSystemCPUUtilization) recordDataPoint(start pcommon.Timestamp, ts pcommon.Timestamp, val float64) {
+func (m *metricSystemCPUUtilization) recordDataPoint(start pcommon.Timestamp, ts pcommon.Timestamp, val float64, cpuAttributeValue string, stateAttributeValue string) {
 	if !m.config.Enabled {
 		return
 	}
@@ -165,6 +216,8 @@ func (m *metricSystemCPUUtilization) recordDataPoint(start pcommon.Timestamp, ts
 	dp.SetStartTimestamp(start)
 	dp.SetTimestamp(ts)
 	dp.SetDoubleValue(val)
+	dp.Attributes().PutStr("cpu", cpuAttributeValue)
+	dp.Attributes().PutStr("state", stateAttributeValue)
 }
 
 // updateCapacity saves max length of data point slices that will be used for the slice capacity.
@@ -207,9 +260,10 @@ func (m *metricSystemCPUUtilizationV1) init() {
 	m.data.SetEmptySum()
 	m.data.Sum().SetIsMonotonic(true)
 	m.data.Sum().SetAggregationTemporality(pmetric.AggregationTemporalityCumulative)
+	m.data.Sum().DataPoints().EnsureCapacity(m.capacity)
 }
 
-func (m *metricSystemCPUUtilizationV1) recordDataPoint(start pcommon.Timestamp, ts pcommon.Timestamp, val float64) {
+func (m *metricSystemCPUUtilizationV1) recordDataPoint(start pcommon.Timestamp, ts pcommon.Timestamp, val float64, cpuLogicalNumberAttributeValue string, stateAttributeValue string) {
 	if !m.config.Enabled {
 		return
 	}
@@ -217,6 +271,8 @@ func (m *metricSystemCPUUtilizationV1) recordDataPoint(start pcommon.Timestamp, 
 	dp.SetStartTimestamp(start)
 	dp.SetTimestamp(ts)
 	dp.SetDoubleValue(val)
+	dp.Attributes().PutStr("cpu.logical_number", cpuLogicalNumberAttributeValue)
+	dp.Attributes().PutStr("state", stateAttributeValue)
 }
 
 // updateCapacity saves max length of data point slices that will be used for the slice capacity.
@@ -343,13 +399,13 @@ func NewMetricsBuilder(mbc MetricsBuilderConfig, settings scraper.Settings, opti
 	}
 	if ReceiverHostmetricsEmitV1SystemConventionsFeatureGate.IsEnabled() {
 		if mb.metricLinuxMemoryAvailable.data.Type() != mb.metricSystemMemoryLinuxAvailable.data.Type() {
-			// Disable legacy metric if legacy and latest have same name but different typs
+			// Disable legacy metric if legacy and latest have same name but different types
 			mb.metricLinuxMemoryAvailable.config.Enabled = false
 		}
 	}
 	if ReceiverHostmetricsEmitV1SystemConventionsFeatureGate.IsEnabled() {
 		if mb.metricSystemCPUUtilization.data.Type() != mb.metricSystemCPUUtilizationV1.data.Type() {
-			// Disable legacy metric if legacy and latest have same name but different typs
+			// Disable legacy metric if legacy and latest have same name but different types
 			mb.metricSystemCPUUtilization.config.Enabled = false
 		}
 	}
@@ -464,23 +520,23 @@ func (mb *MetricsBuilder) RecordSystemCPUFooDataPoint(ts pcommon.Timestamp, val 
 }
 
 // RecordSystemCPUUtilizationDataPoint adds a data point to system.cpu.utilization metric.
-func (mb *MetricsBuilder) RecordSystemCPUUtilizationDataPoint(ts pcommon.Timestamp, val float64) {
+func (mb *MetricsBuilder) RecordSystemCPUUtilizationDataPoint(ts pcommon.Timestamp, val float64, cpuAttributeValue string, stateAttributeValue AttributeState) {
 	// Dual-schema emission controlled by feature gates
 	// TODO need to handle dual emission correctly:
 	// 1) If metric name stays the same but an attribute is renamed, emit single metric with both v0 and v1 attributes
 	// 2) If metric name says the same but the type changes, just emit the v1 metric
 
 	if !ReceiverHostmetricsDontEmitV0SystemConventionsFeatureGate.IsEnabled() {
-		mb.metricSystemCPUUtilization.recordDataPoint(mb.startTime, ts, val)
+		mb.metricSystemCPUUtilization.recordDataPoint(mb.startTime, ts, val, cpuAttributeValue, stateAttributeValue.String())
 	}
 	if ReceiverHostmetricsEmitV1SystemConventionsFeatureGate.IsEnabled() {
-		mb.metricSystemCPUUtilizationV1.recordDataPoint(mb.startTime, ts, val)
+		mb.metricSystemCPUUtilizationV1.recordDataPoint(mb.startTime, ts, val, cpuAttributeValue, stateAttributeValue.String())
 	}
 }
 
 // RecordSystemCPUUtilizationV1DataPoint adds a data point to system.cpu.utilization@v1 metric.
-func (mb *MetricsBuilder) RecordSystemCPUUtilizationV1DataPoint(ts pcommon.Timestamp, val float64) {
-	mb.metricSystemCPUUtilizationV1.recordDataPoint(mb.startTime, ts, val)
+func (mb *MetricsBuilder) RecordSystemCPUUtilizationV1DataPoint(ts pcommon.Timestamp, val float64, cpuLogicalNumberAttributeValue string, stateAttributeValue AttributeState) {
+	mb.metricSystemCPUUtilizationV1.recordDataPoint(mb.startTime, ts, val, cpuLogicalNumberAttributeValue, stateAttributeValue.String())
 }
 
 // RecordSystemMemoryLinuxAvailableDataPoint adds a data point to system.memory.linux.available metric.

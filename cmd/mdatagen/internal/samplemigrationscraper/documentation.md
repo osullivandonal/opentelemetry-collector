@@ -28,6 +28,13 @@ CPU utilization as a ratio.
 
 When the disable-old gate is enabled, emission of this metric is suppressed. When the enable-new gate is enabled, the target metric is emitted. If both gates are disabled, only this metric is emitted; if both are enabled, dual emission occurs.
 
+#### Attributes
+
+| Name | Description | Values | Requirement Level | Semantic Convention |
+| ---- | ----------- | ------ | ----------------- | ------------------- |
+| cpu | Logical CPU number starting at 0. | Any Str | Recommended | - |
+| state | Breakdown of CPU usage by type. | Str: ``idle``, ``interrupt``, ``nice``, ``softirq``, ``steal``, ``system``, ``user``, ``wait`` | Recommended | - |
+
 ### system.cpu.utilization@v1
 
 CPU utilization as a monotonic cumulative sum.
@@ -37,6 +44,13 @@ CPU utilization as a monotonic cumulative sum.
 | 1 | Sum | Double | Cumulative | true | Beta |
 
 Emitted Name: `system.cpu.utilization`
+
+#### Attributes
+
+| Name | Description | Values | Requirement Level | Semantic Convention |
+| ---- | ----------- | ------ | ----------------- | ------------------- |
+| cpu.logical_number | The logical CPU number [0, n-1]. | Any Str | Recommended | - |
+| state | Breakdown of CPU usage by type. | Str: ``idle``, ``interrupt``, ``nice``, ``softirq``, ``steal``, ``system``, ``user``, ``wait`` | Recommended | - |
 
 ## Optional Metrics
 
