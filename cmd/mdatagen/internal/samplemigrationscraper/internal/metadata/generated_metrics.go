@@ -263,7 +263,7 @@ func (m *metricSystemCPUUtilizationV1) init() {
 	m.data.Sum().DataPoints().EnsureCapacity(m.capacity)
 }
 
-func (m *metricSystemCPUUtilizationV1) recordDataPoint(start pcommon.Timestamp, ts pcommon.Timestamp, val float64, cpuLogicalNumberAttributeValue string, stateAttributeValue string) {
+func (m *metricSystemCPUUtilizationV1) recordDataPoint(start pcommon.Timestamp, ts pcommon.Timestamp, val float64, cpuLogicalNumberAttributeValue string, stateAttributeValue string, emitLegacyAttrs bool) {
 	if !m.config.Enabled {
 		return
 	}
@@ -273,6 +273,10 @@ func (m *metricSystemCPUUtilizationV1) recordDataPoint(start pcommon.Timestamp, 
 	dp.SetDoubleValue(val)
 	dp.Attributes().PutStr("cpu.logical_number", cpuLogicalNumberAttributeValue)
 	dp.Attributes().PutStr("state", stateAttributeValue)
+	if emitLegacyAttrs {
+		dp.Attributes().PutStr("cpu", cpuLogicalNumberAttributeValue)
+		dp.Attributes().PutStr("state", stateAttributeValue)
+	}
 }
 
 // updateCapacity saves max length of data point slices that will be used for the slice capacity.
@@ -398,14 +402,21 @@ func NewMetricsBuilder(mbc MetricsBuilderConfig, settings scraper.Settings, opti
 		metricSystemMemoryLinuxAvailable: newMetricSystemMemoryLinuxAvailable(mbc.Metrics.SystemMemoryLinuxAvailable),
 	}
 	if ReceiverHostmetricsEmitV1SystemConventionsFeatureGate.IsEnabled() {
-		if mb.metricLinuxMemoryAvailable.data.Type() != mb.metricSystemMemoryLinuxAvailable.data.Type() {
-			// Disable legacy metric if legacy and latest have same name but different types
-			mb.metricLinuxMemoryAvailable.config.Enabled = false
+		if mb.metricLinuxMemoryAvailable.config.Enabled && mb.metricSystemMemoryLinuxAvailable.config.Enabled {
+			if mb.metricLinuxMemoryAvailable.data.Type() != mb.metricSystemMemoryLinuxAvailable.data.Type() {
+				// Disable legacy metric if legacy and latest have same name but different types
+				mb.metricLinuxMemoryAvailable.config.Enabled = false
+			}
 		}
 	}
 	if ReceiverHostmetricsEmitV1SystemConventionsFeatureGate.IsEnabled() {
-		if mb.metricSystemCPUUtilization.data.Type() != mb.metricSystemCPUUtilizationV1.data.Type() {
-			// Disable legacy metric if legacy and latest have same name but different types
+		if mb.metricSystemCPUUtilization.config.Enabled && mb.metricSystemCPUUtilizationV1.config.Enabled {
+			if mb.metricSystemCPUUtilization.data.Type() != mb.metricSystemCPUUtilizationV1.data.Type() {
+				// Disable legacy metric if legacy and latest have same name but different types
+				mb.metricSystemCPUUtilization.config.Enabled = false
+			}
+			// Disable legacy metric if legacy and latest have same name but different attributes
+			// The v1 metric will emit both attribute sets during migration
 			mb.metricSystemCPUUtilization.config.Enabled = false
 		}
 	}
@@ -502,10 +513,6 @@ func (mb *MetricsBuilder) Emit(options ...ResourceMetricsOption) pmetric.Metrics
 // RecordLinuxMemoryAvailableDataPoint adds a data point to linux.memory.available metric.
 func (mb *MetricsBuilder) RecordLinuxMemoryAvailableDataPoint(ts pcommon.Timestamp, val int64) {
 	// Dual-schema emission controlled by feature gates
-	// TODO need to handle dual emission correctly:
-	// 1) If metric name stays the same but an attribute is renamed, emit single metric with both v0 and v1 attributes
-	// 2) If metric name says the same but the type changes, just emit the v1 metric
-
 	if !ReceiverHostmetricsDontEmitV0SystemConventionsFeatureGate.IsEnabled() {
 		mb.metricLinuxMemoryAvailable.recordDataPoint(mb.startTime, ts, val)
 	}
@@ -522,21 +529,17 @@ func (mb *MetricsBuilder) RecordSystemCPUFooDataPoint(ts pcommon.Timestamp, val 
 // RecordSystemCPUUtilizationDataPoint adds a data point to system.cpu.utilization metric.
 func (mb *MetricsBuilder) RecordSystemCPUUtilizationDataPoint(ts pcommon.Timestamp, val float64, cpuAttributeValue string, stateAttributeValue AttributeState) {
 	// Dual-schema emission controlled by feature gates
-	// TODO need to handle dual emission correctly:
-	// 1) If metric name stays the same but an attribute is renamed, emit single metric with both v0 and v1 attributes
-	// 2) If metric name says the same but the type changes, just emit the v1 metric
-
 	if !ReceiverHostmetricsDontEmitV0SystemConventionsFeatureGate.IsEnabled() {
 		mb.metricSystemCPUUtilization.recordDataPoint(mb.startTime, ts, val, cpuAttributeValue, stateAttributeValue.String())
 	}
 	if ReceiverHostmetricsEmitV1SystemConventionsFeatureGate.IsEnabled() {
-		mb.metricSystemCPUUtilizationV1.recordDataPoint(mb.startTime, ts, val, cpuAttributeValue, stateAttributeValue.String())
+		mb.metricSystemCPUUtilizationV1.recordDataPoint(mb.startTime, ts, val, cpuAttributeValue, stateAttributeValue.String(), !ReceiverHostmetricsDontEmitV0SystemConventionsFeatureGate.IsEnabled())
 	}
 }
 
 // RecordSystemCPUUtilizationV1DataPoint adds a data point to system.cpu.utilization@v1 metric.
 func (mb *MetricsBuilder) RecordSystemCPUUtilizationV1DataPoint(ts pcommon.Timestamp, val float64, cpuLogicalNumberAttributeValue string, stateAttributeValue AttributeState) {
-	mb.metricSystemCPUUtilizationV1.recordDataPoint(mb.startTime, ts, val, cpuLogicalNumberAttributeValue, stateAttributeValue.String())
+	mb.metricSystemCPUUtilizationV1.recordDataPoint(mb.startTime, ts, val, cpuLogicalNumberAttributeValue, stateAttributeValue.String(), false)
 }
 
 // RecordSystemMemoryLinuxAvailableDataPoint adds a data point to system.memory.linux.available metric.
